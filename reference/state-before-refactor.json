@@ -1,0 +1,2889 @@
+{
+ "bgp_sessions": [
+  "got-rtr-01_mma-rtr-01",
+  "got-rtr-01_osl-rtr-01",
+  "mma-rtr-01_osl-rtr-01",
+  "sto-rtr-01_got-rtr-01",
+  "sto-rtr-01_mma-rtr-01",
+  "sto-rtr-01_osl-rtr-01"
+ ],
+ "cable_segments": [
+  "bb-cbl-00001 -> bb-cbl-00001-route",
+  "bb-cbl-00002 -> bb-cbl-00002-route",
+  "bb-cbl-00003 -> bb-cbl-00003-route"
+ ],
+ "cables": {
+  "circuit:NF-BRG-0001:A <> interface:sto-rtr-01:et-0/0/0": {
+   "color": "",
+   "comments": "NF-BRG-0001 (A-side) demarc",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00004",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "circuit:NF-BRG-0001:Z <> interface:mma-rtr-01:et-0/0/0": {
+   "color": "",
+   "comments": "NF-BRG-0001 (Z-side) demarc",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-cbl-00002",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "circuit:VKB-INET-0001:A <> rearport:vastkust-got-panel-01:Port 1": {
+   "color": "",
+   "comments": "VKB-INET-0001 (A-side) <-> vastkust-got-panel-01 (Vastkust's own incoming fiber)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00007",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "vastkust-bredband-ab",
+   "type": null
+  },
+  "frontport:got-mmr-nordfiber-01:Port 1 <> frontport:polaris-got-mmr-01:Port 1": {
+   "color": "",
+   "comments": "polaris-got-mmr-01 <-> got-mmr-nordfiber-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00010",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "frontport:got-mmr-nordfiber-01:Port 2 <> frontport:vasthamnen-got-mmr-01:Port 1": {
+   "color": "",
+   "comments": "vasthamnen-got-mmr-01 <-> got-mmr-nordfiber-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00014",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "vasthamnen-logistics",
+   "type": null
+  },
+  "frontport:got-mmr-nordfiber-01:Port 3 <> frontport:vastkust-got-panel-01:Port 1": {
+   "color": "",
+   "comments": "vastkust-got-panel-01 <-> got-mmr-nordfiber-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00018",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:got-patch-01:Port 1 <> rearport:got-wdm-01:Line": {
+   "color": "",
+   "comments": "got-wdm-01 Line <-> got-patch-01 Port 1 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-wdm-01-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:got-patch-01:Port 2 <> rearport:got-wdm-02:Line": {
+   "color": "",
+   "comments": "got-wdm-02 Line <-> got-patch-01 Port 2 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-wdm-02-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:got-patch-01:Port 3 <> interface:got-rtr-01:xe-0/1/1": {
+   "color": "",
+   "comments": "got-patch-01 <-> got-rtr-01 xe-0/1/1 (in-rack jumper)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00020",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:got-patch-01:Port 4 <> interface:got-sw-01:Ethernet2": {
+   "color": "",
+   "comments": "got-patch-01 <-> got-sw-01 Ethernet2 (in-rack jumper)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00011",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:got-patch-01:Port 5 <> interface:got-sw-01:Ethernet3": {
+   "color": "",
+   "comments": "got-patch-01 <-> got-sw-01 Ethernet3 (in-rack jumper)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00015",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:got-wdm-01:922 <> frontport:got-wdm-02:922": {
+   "color": "",
+   "comments": "Regeneration jumper: Baltic Retail Group backup path, STO-facing <-> MMA-facing WDM hop",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00004",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:hel-mmr-bfn-01:Port 1 <> frontport:hel-mmr-nordfiber-01:Port 2": {
+   "color": "",
+   "comments": "hel-mmr-bfn-01 <-> hel-mmr-nordfiber-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00006",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:hel-mmr-nordfiber-01:Port 1 <> frontport:hel-mmr-nsn-01:Port 1": {
+   "color": "",
+   "comments": "hel-mmr-nsn-01 <-> hel-mmr-nordfiber-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00003",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:hel-patch-01:Port 1 <> rearport:hel-wdm-01:Line": {
+   "color": "",
+   "comments": "hel-wdm-01 Line <-> hel-patch-01 Port 1 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-wdm-01-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:hel-patch-01:Port 2 <> rearport:hel-wdm-02:Line": {
+   "color": "",
+   "comments": "hel-wdm-02 Line <-> hel-patch-01 Port 2 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-wdm-02-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:hel-wdm-01:921 <> interface:hel-rtr-01:et-0/0/0": {
+   "color": "",
+   "comments": "hel-wdm-01 channel 921 <-> hel-rtr-01 et-0/0/0 (internal backbone handoff)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-wdm-01-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:hel-wdm-02:921 <> interface:hel-rtr-01:et-0/0/1": {
+   "color": "",
+   "comments": "hel-wdm-02 channel 921 <-> hel-rtr-01 et-0/0/1 (internal backbone handoff)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-wdm-02-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:mma-patch-01:Port 2 <> rearport:mma-wdm-01:Line": {
+   "color": "",
+   "comments": "mma-wdm-01 Line <-> mma-patch-01 Port 2 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-wdm-01-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:mma-wdm-01:922 <> interface:mma-dcp2-01:Line/1/1": {
+   "color": "",
+   "comments": "mma-wdm-01 channel 922 <-> mma-dcp2-01 Line/1/1 (DCP-110 line side)",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-dcp2-01-mod1-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:osl-patch-01:Port 1 <> rearport:osl-wdm-01:Line": {
+   "color": "",
+   "comments": "osl-wdm-01 Line <-> osl-patch-01 Port 1 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-wdm-01-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:osl-wdm-01:921 <> interface:osl-dcp2-01:Line/1/1": {
+   "color": "",
+   "comments": "osl-wdm-01 channel 921 <-> osl-dcp2-01 Line/1/1 (DCP-110 line side)",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-dcp2-01-mod1-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:polaris-got-tor-01:Port 1 <> interface:polaris-got-sw-01:Ethernet49": {
+   "color": "",
+   "comments": "polaris-got-sw-01 uplink <-> polaris-got-tor-01 Port 1 (in-rack)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00008",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "frontport:polaris-sto-mmr-01:Port 1 <> frontport:sto-mmr-nordfiber-01:Port 1": {
+   "color": "",
+   "comments": "polaris-sto-mmr-01 <-> sto-mmr-nordfiber-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00007",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "frontport:polaris-sto-tor-01:Port 1 <> interface:polaris-sto-sw-01:Ethernet49": {
+   "color": "",
+   "comments": "polaris-sto-sw-01 uplink <-> polaris-sto-tor-01 Port 1 (in-rack)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00005",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "frontport:sto-mmr-bfn-01:Port 1 <> frontport:sto-mmr-nordfiber-01:Port 3": {
+   "color": "",
+   "comments": "sto-mmr-nordfiber-01 <-> sto-mmr-bfn-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00014",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-mmr-nordfiber-01:Port 2 <> frontport:sto-mmr-nsn-01:Port 1": {
+   "color": "",
+   "comments": "sto-mmr-nordfiber-01 <-> sto-mmr-nsn-01 (cross-connect jumper, MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00011",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-patch-01:Port 1 <> rearport:sto-wdm-02:Line": {
+   "color": "",
+   "comments": "sto-wdm-02 Line <-> sto-patch-01 Port 1 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-02-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-patch-01:Port 3 <> rearport:sto-wdm-01:Line": {
+   "color": "",
+   "comments": "sto-wdm-01 Line <-> sto-patch-01 Port 3 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-01-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-patch-01:Port 4 <> interface:sto-sw-01:Ethernet2": {
+   "color": "",
+   "comments": "sto-patch-01 <-> sto-sw-01 Ethernet2 (in-rack jumper)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00008",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-patch-01:Port 5 <> rearport:sto-wdm-03:Line": {
+   "color": "",
+   "comments": "sto-wdm-03 Line <-> sto-patch-01 Port 5 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-03-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-patch-01:Port 6 <> rearport:sto-wdm-04:Line": {
+   "color": "",
+   "comments": "sto-wdm-04 Line <-> sto-patch-01 Port 6 (WDM cross-connect)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-04-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-wdm-01:921 <> interface:sto-dcp2-01:Line/1/1": {
+   "color": "",
+   "comments": "sto-wdm-01 channel 921 <-> sto-dcp2-01 Line/1/1 (DCP-110 line side)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-dcp2-01-mod1-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-wdm-02:922 <> interface:sto-dcp2-01:Line/2/1": {
+   "color": "",
+   "comments": "sto-wdm-02 channel 922 <-> sto-dcp2-01 Line/2/1 (DCP-110 line side)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-dcp2-01-mod2-line",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-wdm-03:921 <> interface:sto-rtr-01:et-0/0/2": {
+   "color": "",
+   "comments": "sto-wdm-03 channel 921 <-> sto-rtr-01 et-0/0/2 (internal backbone handoff)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-03-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:sto-wdm-04:921 <> interface:sto-rtr-01:et-0/0/3": {
+   "color": "",
+   "comments": "sto-wdm-04 channel 921 <-> sto-rtr-01 et-0/0/3 (internal backbone handoff)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-04-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "frontport:vasthamnen-got-tor-01:Port 1 <> interface:vasthamnen-got-sw-01:Ethernet49": {
+   "color": "",
+   "comments": "vasthamnen-got-sw-01 uplink <-> vasthamnen-got-tor-01 Port 1 (in-rack)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00012",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "vasthamnen-logistics",
+   "type": null
+  },
+  "interface:got-dcp2-01:if-1/eth1 <> interface:got-oob-01:Ethernet7": {
+   "color": "",
+   "comments": "OOB management: got-dcp2-01 if-1/eth1 <-> got-oob-01 Ethernet7",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00025",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-idf-sw-01:Ethernet1 <> interface:got-ws-erik:Gig-E 1": {
+   "color": "",
+   "comments": "TP outlet, Erik Lindqvist's desk (Office Floor 3) <-> IDF Floor 3 distribution switch",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00005",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6a"
+  },
+  "interface:got-idf-sw-01:Ethernet49 <> interface:got-sw-01:Ethernet4": {
+   "color": "",
+   "comments": "Inter-floor riser fiber uplink, IDF Floor 3 <-> ground-floor telecom room",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00006",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "smf-os2"
+  },
+  "interface:got-idf-sw-01:Management1 <> interface:got-oob-01:Ethernet8": {
+   "color": "",
+   "comments": "OOB management: got-idf-sw-01 Management1 <-> got-oob-01 Ethernet8",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00026",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet1 <> interface:got-rtr-01:fxp0": {
+   "color": "",
+   "comments": "OOB management: got-rtr-01 fxp0 <-> got-oob-01 Ethernet1",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00021",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet10 <> interface:polaris-got-srv-01:iDRAC9": {
+   "color": "",
+   "comments": "OOB management: polaris-got-srv-01 iDRAC9 <-> got-oob-01 Ethernet10",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00028",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet11 <> interface:vasthamnen-got-sw-01:Management1": {
+   "color": "",
+   "comments": "OOB management: vasthamnen-got-sw-01 Management1 <-> got-oob-01 Ethernet11",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00029",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet12 <> interface:vasthamnen-got-srv-01:iDRAC9": {
+   "color": "",
+   "comments": "OOB management: vasthamnen-got-srv-01 iDRAC9 <-> got-oob-01 Ethernet12",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00030",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet2 <> interface:got-sw-01:Management1": {
+   "color": "",
+   "comments": "OOB management: got-sw-01 Management1 <-> got-oob-01 Ethernet2",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00022",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet3 <> interface:got-wdm-01:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: got-wdm-01 Eth0 / Local <-> got-oob-01 Ethernet3",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00023",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet4 <> interface:got-wdm-02:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: got-wdm-02 Eth0 / Local <-> got-oob-01 Ethernet4",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00024",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-oob-01:Ethernet49 <> interface:got-rtr-01:xe-0/1/2": {
+   "color": "",
+   "comments": "got-oob-01 OOB uplink <-> got-rtr-01 xe-0/1/2",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00031",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "dac-passive"
+  },
+  "interface:got-oob-01:Ethernet9 <> interface:polaris-got-sw-01:Management1": {
+   "color": "",
+   "comments": "OOB management: polaris-got-sw-01 Management1 <-> got-oob-01 Ethernet9",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00027",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:got-rtr-01:xe-0/1/0 <> interface:got-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "got-rtr-01 <-> got-sw-01 uplink",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:hel-oob-01:Ethernet1 <> interface:hel-rtr-01:fxp0": {
+   "color": "",
+   "comments": "OOB management: hel-rtr-01 fxp0 <-> hel-oob-01 Ethernet1",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00008",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:hel-oob-01:Ethernet2 <> interface:hel-sw-01:Management1": {
+   "color": "",
+   "comments": "OOB management: hel-sw-01 Management1 <-> hel-oob-01 Ethernet2",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00009",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:hel-oob-01:Ethernet3 <> interface:hel-wdm-01:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: hel-wdm-01 Eth0 / Local <-> hel-oob-01 Ethernet3",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00010",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:hel-oob-01:Ethernet4 <> interface:hel-wdm-02:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: hel-wdm-02 Eth0 / Local <-> hel-oob-01 Ethernet4",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00011",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:hel-oob-01:Ethernet49 <> interface:hel-rtr-01:xe-0/1/2": {
+   "color": "",
+   "comments": "hel-oob-01 OOB uplink <-> hel-rtr-01 xe-0/1/2",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00012",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "dac-passive"
+  },
+  "interface:hel-rtr-01:xe-0/1/0 <> interface:hel-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "hel-rtr-01 <-> hel-sw-01 uplink",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:mma-dcp2-01:Client/1/1 <> interface:mma-rtr-01:et-0/0/1": {
+   "color": "",
+   "comments": "mma-dcp2-01 Client/1/1 <-> mma-rtr-01 et-0/0/1 (grey client handoff via DCP-110)",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-wdm-01-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:mma-dcp2-01:if-1/eth1 <> interface:mma-oob-01:Ethernet7": {
+   "color": "",
+   "comments": "OOB management: mma-dcp2-01 if-1/eth1 <-> mma-oob-01 Ethernet7",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-cbl-00006",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:mma-oob-01:Ethernet1 <> interface:mma-rtr-01:fxp0": {
+   "color": "",
+   "comments": "OOB management: mma-rtr-01 fxp0 <-> mma-oob-01 Ethernet1",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-cbl-00003",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:mma-oob-01:Ethernet2 <> interface:mma-sw-01:Management1": {
+   "color": "",
+   "comments": "OOB management: mma-sw-01 Management1 <-> mma-oob-01 Ethernet2",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-cbl-00004",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:mma-oob-01:Ethernet3 <> interface:mma-wdm-01:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: mma-wdm-01 Eth0 / Local <-> mma-oob-01 Ethernet3",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-cbl-00005",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:mma-oob-01:Ethernet49 <> interface:mma-rtr-01:xe-0/1/2": {
+   "color": "",
+   "comments": "mma-oob-01 OOB uplink <-> mma-rtr-01 xe-0/1/2",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-cbl-00007",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "dac-passive"
+  },
+  "interface:mma-rtr-01:xe-0/1/0 <> interface:mma-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "mma-rtr-01 <-> mma-sw-01 uplink",
+   "custom_fields": {},
+   "description": "",
+   "label": "mma-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:osl-dcp2-01:Client/1/1 <> interface:osl-sw-01:Ethernet49/1": {
+   "color": "",
+   "comments": "osl-dcp2-01 Client/1/1 <-> osl-sw-01 Ethernet49/1 (grey client handoff via DCP-110)",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-wdm-01-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:osl-dcp2-01:if-1/eth1 <> interface:osl-oob-01:Ethernet7": {
+   "color": "",
+   "comments": "OOB management: osl-dcp2-01 if-1/eth1 <-> osl-oob-01 Ethernet7",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-cbl-00005",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:osl-oob-01:Ethernet1 <> interface:osl-rtr-01:fxp0": {
+   "color": "",
+   "comments": "OOB management: osl-rtr-01 fxp0 <-> osl-oob-01 Ethernet1",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-cbl-00002",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:osl-oob-01:Ethernet2 <> interface:osl-sw-01:Management1": {
+   "color": "",
+   "comments": "OOB management: osl-sw-01 Management1 <-> osl-oob-01 Ethernet2",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-cbl-00003",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:osl-oob-01:Ethernet3 <> interface:osl-wdm-01:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: osl-wdm-01 Eth0 / Local <-> osl-oob-01 Ethernet3",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-cbl-00004",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:osl-oob-01:Ethernet49 <> interface:osl-rtr-01:xe-0/1/2": {
+   "color": "",
+   "comments": "osl-oob-01 OOB uplink <-> osl-rtr-01 xe-0/1/2",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-cbl-00006",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "dac-passive"
+  },
+  "interface:osl-rtr-01:xe-0/1/0 <> interface:osl-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "osl-rtr-01 <-> osl-sw-01 uplink",
+   "custom_fields": {},
+   "description": "",
+   "label": "osl-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:polaris-got-srv-01:Gig-E 1 <> interface:polaris-got-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "polaris-got-srv-01 <-> polaris-got-sw-01 (tenant-owned access switch)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00002",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "interface:polaris-sto-srv-01:Gig-E 1 <> interface:polaris-sto-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "polaris-sto-srv-01 <-> polaris-sto-sw-01 (tenant-owned access switch)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00002",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "interface:polaris-sto-srv-01:iDRAC9 <> interface:sto-oob-01:Ethernet9": {
+   "color": "",
+   "comments": "OOB management: polaris-sto-srv-01 iDRAC9 <-> sto-oob-01 Ethernet9",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00023",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:polaris-sto-srv-02:Gig-E 1 <> interface:polaris-sto-sw-01:Ethernet2": {
+   "color": "",
+   "comments": "polaris-sto-srv-02 <-> polaris-sto-sw-01 (tenant-owned access switch)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00003",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "interface:polaris-sto-srv-02:iDRAC9 <> interface:sto-oob-01:Ethernet10": {
+   "color": "",
+   "comments": "OOB management: polaris-sto-srv-02 iDRAC9 <-> sto-oob-01 Ethernet10",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00024",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:polaris-sto-sw-01:Management1 <> interface:sto-oob-01:Ethernet8": {
+   "color": "",
+   "comments": "OOB management: polaris-sto-sw-01 Management1 <-> sto-oob-01 Ethernet8",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00022",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-dcp2-01:Client/1/1 <> interface:sto-sw-01:Ethernet49/1": {
+   "color": "",
+   "comments": "sto-dcp2-01 Client/1/1 <-> sto-sw-01 Ethernet49/1 (grey client handoff via DCP-110)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-01-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:sto-dcp2-01:Client/2/1 <> interface:sto-rtr-01:et-0/0/1": {
+   "color": "",
+   "comments": "sto-dcp2-01 Client/2/1 <-> sto-rtr-01 et-0/0/1 (grey client handoff via DCP-110)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-wdm-02-client",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:sto-dcp2-01:if-1/eth1 <> interface:sto-oob-01:Ethernet7": {
+   "color": "",
+   "comments": "OOB management: sto-dcp2-01 if-1/eth1 <-> sto-oob-01 Ethernet7",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00021",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-oob-01:Ethernet1 <> interface:sto-rtr-01:fxp0": {
+   "color": "",
+   "comments": "OOB management: sto-rtr-01 fxp0 <-> sto-oob-01 Ethernet1",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00015",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-oob-01:Ethernet2 <> interface:sto-sw-01:Management1": {
+   "color": "",
+   "comments": "OOB management: sto-sw-01 Management1 <-> sto-oob-01 Ethernet2",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00016",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-oob-01:Ethernet3 <> interface:sto-wdm-01:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: sto-wdm-01 Eth0 / Local <-> sto-oob-01 Ethernet3",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00017",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-oob-01:Ethernet4 <> interface:sto-wdm-02:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: sto-wdm-02 Eth0 / Local <-> sto-oob-01 Ethernet4",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00018",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-oob-01:Ethernet49 <> interface:sto-rtr-01:xe-0/1/2": {
+   "color": "",
+   "comments": "sto-oob-01 OOB uplink <-> sto-rtr-01 xe-0/1/2",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00025",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "dac-passive"
+  },
+  "interface:sto-oob-01:Ethernet5 <> interface:sto-wdm-03:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: sto-wdm-03 Eth0 / Local <-> sto-oob-01 Ethernet5",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00019",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-oob-01:Ethernet6 <> interface:sto-wdm-04:Eth0 / Local": {
+   "color": "",
+   "comments": "OOB management: sto-wdm-04 Eth0 / Local <-> sto-oob-01 Ethernet6",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00020",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": "cat6"
+  },
+  "interface:sto-rtr-01:xe-0/1/0 <> interface:sto-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "sto-rtr-01 <-> sto-sw-01 uplink",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "interface:vasthamnen-got-srv-01:Gig-E 1 <> interface:vasthamnen-got-sw-01:Ethernet1": {
+   "color": "",
+   "comments": "vasthamnen-got-srv-01 <-> vasthamnen-got-sw-01 (tenant-owned access switch)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00003",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "vasthamnen-logistics",
+   "type": null
+  },
+  "rearport:got-mmr-nordfiber-01:Port 1 <> rearport:got-patch-01:Port 4": {
+   "color": "",
+   "comments": "got-mmr-nordfiber-01 <-> got-patch-01 (trunk, MeetMe room to telecom room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00016",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:got-mmr-nordfiber-01:Port 2 <> rearport:got-patch-01:Port 5": {
+   "color": "",
+   "comments": "got-mmr-nordfiber-01 <-> got-patch-01 (trunk, MeetMe room to telecom room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00017",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:got-mmr-nordfiber-01:Port 3 <> rearport:got-patch-01:Port 3": {
+   "color": "",
+   "comments": "got-mmr-nordfiber-01 <-> got-patch-01 (trunk, MeetMe room to telecom room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00019",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:got-patch-01:Port 1 <> rearport:sto-patch-01:Port 1": {
+   "color": "",
+   "comments": "Nordfiber-owned backbone, Stockholm <-> Gothenburg",
+   "custom_fields": {},
+   "description": "",
+   "label": "bb-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:got-patch-01:Port 2 <> rearport:mma-patch-01:Port 2": {
+   "color": "",
+   "comments": "Nordfiber-owned backbone, Gothenburg <-> Malmo",
+   "custom_fields": {},
+   "description": "",
+   "label": "bb-cbl-00004",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:hel-mmr-bfn-01:Port 1 <> rearport:sto-mmr-bfn-01:Port 1": {
+   "color": "",
+   "comments": "BFN-DF-0001: leased fiber span, sto-mmr-bfn-01 <-> hel-mmr-bfn-01",
+   "custom_fields": {},
+   "description": "",
+   "label": "bfn-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "baltic-fibre-networks-ou",
+   "type": "smf-os2"
+  },
+  "rearport:hel-mmr-nordfiber-01:Port 1 <> rearport:hel-patch-01:Port 1": {
+   "color": "",
+   "comments": "hel-mmr-nordfiber-01 <-> hel-patch-01 (trunk, MeetMe room to telecom room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00004",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:hel-mmr-nordfiber-01:Port 2 <> rearport:hel-patch-01:Port 2": {
+   "color": "",
+   "comments": "hel-mmr-nordfiber-01 <-> hel-patch-01 (trunk, MeetMe room to telecom room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "hel-cbl-00007",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:hel-mmr-nsn-01:Port 1 <> rearport:sto-mmr-nsn-01:Port 1": {
+   "color": "",
+   "comments": "NSN-DF-0001: leased fiber span, sto-mmr-nsn-01 <-> hel-mmr-nsn-01",
+   "custom_fields": {},
+   "description": "",
+   "label": "nsn-cbl-00001",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordic-subsea-networks-ab",
+   "type": "smf-os2"
+  },
+  "rearport:mma-patch-01:Port 1 <> rearport:sto-patch-01:Port 2": {
+   "color": "",
+   "comments": "Nordfiber-owned backbone, Stockholm <-> Malmo",
+   "custom_fields": {},
+   "description": "",
+   "label": "bb-cbl-00002",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:osl-patch-01:Port 1 <> rearport:sto-patch-01:Port 3": {
+   "color": "",
+   "comments": "Leased dark fiber (Polarlink Transit), Stockholm <-> Oslo",
+   "custom_fields": {},
+   "description": "",
+   "label": "bb-cbl-00003",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:polaris-got-mmr-01:Port 1 <> rearport:polaris-got-tor-01:Port 1": {
+   "color": "",
+   "comments": "polaris-got-tor-01 <-> polaris-got-mmr-01 (trunk to MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00009",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "rearport:polaris-sto-mmr-01:Port 1 <> rearport:polaris-sto-tor-01:Port 1": {
+   "color": "",
+   "comments": "polaris-sto-tor-01 <-> polaris-sto-mmr-01 (trunk to MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00006",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "polaris-cloud-services",
+   "type": null
+  },
+  "rearport:sto-mmr-nordfiber-01:Port 1 <> rearport:sto-patch-01:Port 4": {
+   "color": "",
+   "comments": "sto-mmr-nordfiber-01 <-> sto-patch-01 (trunk, MeetMe room to telecom room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00009",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:sto-mmr-nordfiber-01:Port 2 <> rearport:sto-patch-01:Port 5": {
+   "color": "",
+   "comments": "sto-patch-01 <-> sto-mmr-nordfiber-01 (trunk, telecom room to MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00010",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:sto-mmr-nordfiber-01:Port 3 <> rearport:sto-patch-01:Port 6": {
+   "color": "",
+   "comments": "sto-patch-01 <-> sto-mmr-nordfiber-01 (trunk, telecom room to MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "sto-cbl-00013",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "nordfiber-ab",
+   "type": null
+  },
+  "rearport:vasthamnen-got-mmr-01:Port 1 <> rearport:vasthamnen-got-tor-01:Port 1": {
+   "color": "",
+   "comments": "vasthamnen-got-tor-01 <-> vasthamnen-got-mmr-01 (trunk to MeetMe room)",
+   "custom_fields": {},
+   "description": "",
+   "label": "got-cbl-00013",
+   "length": null,
+   "length_unit": null,
+   "status": "connected",
+   "tenant": "vasthamnen-logistics",
+   "type": null
+  }
+ },
+ "circuit_geometries": {
+  "BFN-DF-0001": [
+   [
+    18.0686,
+    59.3293
+   ],
+   [
+    18.2948,
+    57.6348
+   ],
+   [
+    24.1052,
+    56.9496
+   ],
+   [
+    24.7536,
+    59.437
+   ],
+   [
+    24.9384,
+    60.1699
+   ]
+  ],
+  "NSN-DF-0001": [
+   [
+    18.0686,
+    59.3293
+   ],
+   [
+    19.9348,
+    60.0971
+   ],
+   [
+    21.6165,
+    63.0951
+   ],
+   [
+    24.9384,
+    60.1699
+   ]
+  ]
+ },
+ "circuits": {
+  "BFN-DF-0001": {
+   "commit_rate": null,
+   "description": "Backup leased dark fiber pair, Stockholm <-> Helsinki via Gotland, Riga (Latvia), and Tallinn (Estonia). Longer, geographically diverse route.",
+   "provider": "baltic-fibre-networks-ou",
+   "tenant": "nordfiber-ab",
+   "terminations": {
+    "A": {
+     "port_speed": null,
+     "site": "nordfiber-stockholm-dc"
+    },
+    "Z": {
+     "port_speed": null,
+     "site": "nordfiber-helsinki-dc"
+    }
+   },
+   "type": "dark-fiber"
+  },
+  "NF-BRG-0001": {
+   "commit_rate": 10000000,
+   "description": "Baltic Retail Group leased line, Stockholm <-> Malmo",
+   "provider": "nordfiber-ab",
+   "tenant": "baltic-retail-group",
+   "terminations": {
+    "A": {
+     "port_speed": 10000000,
+     "site": "nordfiber-stockholm-dc"
+    },
+    "Z": {
+     "port_speed": 10000000,
+     "site": "nordfiber-malmo-pop"
+    }
+   },
+   "type": "epl"
+  },
+  "NF-BRG-0002": {
+   "commit_rate": 10000000,
+   "description": "Backup/protect path for NF-BRG-0001, Stockholm <-> Malmo via Gothenburg over DWDM (regenerated at got-wdm-01/got-wdm-02)",
+   "provider": "nordfiber-ab",
+   "tenant": "baltic-retail-group",
+   "terminations": {
+    "A": {
+     "port_speed": 10000000,
+     "site": "nordfiber-stockholm-dc"
+    },
+    "Z": {
+     "port_speed": 10000000,
+     "site": "nordfiber-malmo-pop"
+    }
+   },
+   "type": "epl"
+  },
+  "NSN-DF-0001": {
+   "commit_rate": null,
+   "description": "Primary leased dark fiber pair, Stockholm <-> Helsinki via Mariehamn (Aland) and Vaasa. Shorter of the two routes.",
+   "provider": "nordic-subsea-networks-ab",
+   "tenant": "nordfiber-ab",
+   "terminations": {
+    "A": {
+     "port_speed": null,
+     "site": "nordfiber-stockholm-dc"
+    },
+    "Z": {
+     "port_speed": null,
+     "site": "nordfiber-helsinki-dc"
+    }
+   },
+   "type": "dark-fiber"
+  },
+  "PLT-100234": {
+   "commit_rate": null,
+   "description": "Leased dark fiber pair, Stockholm <-> Oslo (cross-border) — to be lit with Nordfiber's own WDM equipment (Phase 6)",
+   "provider": "polarlink-transit",
+   "tenant": "nordfiber-ab",
+   "terminations": {
+    "A": {
+     "port_speed": null,
+     "site": "nordfiber-stockholm-dc"
+    },
+    "Z": {
+     "port_speed": null,
+     "site": "nordfiber-oslo-pop"
+    }
+   },
+   "type": "dark-fiber"
+  },
+  "VKB-INET-0001": {
+   "commit_rate": 10000000,
+   "description": "Nordfiber AB's own upstream Internet transit, Gothenburg PoP",
+   "provider": "vastkust-bredband-ab",
+   "tenant": "nordfiber-ab",
+   "terminations": {
+    "A": {
+     "port_speed": 10000000,
+     "site": "nordfiber-gothenburg-pop"
+    }
+   },
+   "type": "internet-access"
+  }
+ },
+ "contact_assignments": [
+  "Astrid Nilsen | site-technician | dcim.site | Nordfiber Oslo PoP",
+  "Erik Lindqvist | noc-engineer | dcim.device | got-ws-erik",
+  "Erik Lindqvist | noc-engineer | dcim.site | Nordfiber Gothenburg DC",
+  "Erik Lindqvist | noc-engineer | dcim.site | Nordfiber Malmö PoP",
+  "Erik Lindqvist | noc-engineer | dcim.site | Nordfiber Oslo PoP",
+  "Erik Lindqvist | noc-engineer | dcim.site | Nordfiber Stockholm DC",
+  "Fredrik Dahl | technical-contact | dcim.device | got-mmr-skagerrak-01",
+  "Fredrik Dahl | technical-contact | dcim.device | osl-mmr-skagerrak-01",
+  "Fredrik Dahl | technical-contact | dcim.rack | GOT-RACK-MMR1",
+  "Fredrik Dahl | technical-contact | dcim.rack | OSL-RACK-MMR1",
+  "Fredrik Dahl | technical-contact | dcim.site | Nordfiber Gothenburg DC",
+  "Fredrik Dahl | technical-contact | dcim.site | Nordfiber Oslo PoP",
+  "Ingrid Haugen | technical-contact | tenancy.tenant | Fjord Media Networks",
+  "Johan Eriksson | technical-contact | tenancy.tenant | Polaris Cloud Services",
+  "Kristina Holm | technical-contact | dcim.device | mma-mmr-oresund-01",
+  "Kristina Holm | technical-contact | dcim.rack | MMA-RACK-MMR1",
+  "Kristina Holm | technical-contact | dcim.site | Nordfiber Malmö PoP",
+  "Lena Björk | technical-contact | tenancy.tenant | Västhamnen Logistics",
+  "Maria Svensson | technical-contact | tenancy.tenant | Baltic Retail Group"
+ ],
+ "contacts": {
+  "Astrid Nilsen": {
+   "title": "Field Technician, Oslo"
+  },
+  "Erik Lindqvist": {
+   "title": "NOC Engineer"
+  },
+  "Fredrik Dahl": {
+   "title": "Facility Operations Manager, Skagerrak Interconnect AB"
+  },
+  "Ingrid Haugen": {
+   "title": "Broadcast Engineering Lead, Fjord Media Networks"
+  },
+  "Johan Eriksson": {
+   "title": "Head of Platform Engineering, Polaris Cloud Services"
+  },
+  "Kristina Holm": {
+   "title": "Facility Operations Manager, Oresund Exchange AB"
+  },
+  "Lena Björk": {
+   "title": "Systems Engineer, Västhamnen Logistics"
+  },
+  "Maria Svensson": {
+   "title": "IT Infrastructure Manager, Baltic Retail Group"
+  }
+ },
+ "devices": {
+  "got-dcp2-01": {
+   "asset_tag": "NF-GOT-00001",
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 28.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-1",
+   "role": "wdm-client-shelf",
+   "serial": "SMO-GOT-0001",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-2"
+  },
+  "got-idf-sw-01": {
+   "asset_tag": "NF-GOT-00002",
+   "face": "front",
+   "location": "gothenburg-idf-floor-3",
+   "position": 42.0,
+   "primary_ip4": "10.0.2.13/24",
+   "rack": "GOT-RACK-IDF3",
+   "role": "access-switch",
+   "serial": "ARI-GOT-0001",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7010t-48"
+  },
+  "got-mmr-nordfiber-01": {
+   "asset_tag": "NF-GOT-00003",
+   "face": "front",
+   "location": "gothenburg-meetme-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0001",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "got-mmr-skagerrak-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-meetme-room",
+   "position": 41.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0002",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "skagerrak-interconnect-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "got-oob-01": {
+   "asset_tag": "NF-GOT-00004",
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-1",
+   "role": "oob-switch",
+   "serial": "ARI-GOT-0002",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7010t-48"
+  },
+  "got-patch-01": {
+   "asset_tag": "NF-GOT-00005",
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-1",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0003",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "got-rtr-01": {
+   "asset_tag": "NF-GOT-00006",
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 36.0,
+   "primary_ip4": "10.0.2.11/24",
+   "rack": "GOT-RACK-1",
+   "role": "core-router",
+   "serial": "JNP-GOT-0001",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "juniper-mx204"
+  },
+  "got-sw-01": {
+   "asset_tag": "NF-GOT-00007",
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 35.0,
+   "primary_ip4": "10.0.2.12/24",
+   "rack": "GOT-RACK-1",
+   "role": "aggregation-switch",
+   "serial": "ARI-GOT-0003",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7050sx3-48yc8-f"
+  },
+  "got-wdm-01": {
+   "asset_tag": "NF-GOT-00008",
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 32.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-1",
+   "role": "wdm-terminal",
+   "serial": "SMO-GOT-0002",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "got-wdm-02": {
+   "asset_tag": "NF-GOT-00009",
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 31.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-1",
+   "role": "wdm-terminal",
+   "serial": "SMO-GOT-0003",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "got-ws-erik": {
+   "asset_tag": "NF-GOT-00010",
+   "face": null,
+   "location": "gothenburg-office-floor-3",
+   "position": null,
+   "primary_ip4": "10.0.2.14/24",
+   "rack": null,
+   "role": "workstation",
+   "serial": "DLL-GOT-0001",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "dell-optiplex-sff-7050"
+  },
+  "hel-mmr-bfn-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "helsinki-meetme-room",
+   "position": 37.0,
+   "primary_ip4": null,
+   "rack": "HEL-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-HEL-0001",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "baltic-fibre-networks-ou",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "hel-mmr-nordfiber-01": {
+   "asset_tag": "NF-HEL-00001",
+   "face": "front",
+   "location": "helsinki-meetme-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "HEL-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-HEL-0002",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "hel-mmr-nsn-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "helsinki-meetme-room",
+   "position": 38.0,
+   "primary_ip4": null,
+   "rack": "HEL-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-HEL-0003",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordic-subsea-networks-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "hel-oob-01": {
+   "asset_tag": "NF-HEL-00002",
+   "face": "front",
+   "location": "helsinki-telecom-room",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "HEL-RACK-1",
+   "role": "oob-switch",
+   "serial": "ARI-HEL-0001",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7010t-48"
+  },
+  "hel-patch-01": {
+   "asset_tag": "NF-HEL-00003",
+   "face": "front",
+   "location": "helsinki-telecom-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "HEL-RACK-1",
+   "role": "patch-panel",
+   "serial": "GEN-HEL-0004",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "hel-rtr-01": {
+   "asset_tag": "NF-HEL-00004",
+   "face": "front",
+   "location": "helsinki-telecom-room",
+   "position": 36.0,
+   "primary_ip4": "10.0.5.11/24",
+   "rack": "HEL-RACK-1",
+   "role": "core-router",
+   "serial": "JNP-HEL-0001",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "juniper-mx204"
+  },
+  "hel-sw-01": {
+   "asset_tag": "NF-HEL-00005",
+   "face": "front",
+   "location": "helsinki-telecom-room",
+   "position": 35.0,
+   "primary_ip4": "10.0.5.12/24",
+   "rack": "HEL-RACK-1",
+   "role": "aggregation-switch",
+   "serial": "ARI-HEL-0002",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7050sx3-48yc8-f"
+  },
+  "hel-wdm-01": {
+   "asset_tag": "NF-HEL-00006",
+   "face": "front",
+   "location": "helsinki-telecom-room",
+   "position": 32.0,
+   "primary_ip4": null,
+   "rack": "HEL-RACK-1",
+   "role": "wdm-terminal",
+   "serial": "SMO-HEL-0001",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "hel-wdm-02": {
+   "asset_tag": "NF-HEL-00007",
+   "face": "front",
+   "location": "helsinki-telecom-room",
+   "position": 31.0,
+   "primary_ip4": null,
+   "rack": "HEL-RACK-1",
+   "role": "wdm-terminal",
+   "serial": "SMO-HEL-0002",
+   "site": "nordfiber-helsinki-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "mma-dcp2-01": {
+   "asset_tag": "NF-MMA-00001",
+   "face": "front",
+   "location": "malmo-telecom-room",
+   "position": 28.0,
+   "primary_ip4": null,
+   "rack": "MMA-RACK-1",
+   "role": "wdm-client-shelf",
+   "serial": "SMO-MMA-0001",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-2"
+  },
+  "mma-mmr-nordfiber-01": {
+   "asset_tag": "NF-MMA-00002",
+   "face": "front",
+   "location": "malmo-meetme-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "MMA-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-MMA-0001",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "mma-mmr-oresund-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "malmo-meetme-room",
+   "position": 41.0,
+   "primary_ip4": null,
+   "rack": "MMA-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-MMA-0002",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "oresund-exchange-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "mma-oob-01": {
+   "asset_tag": "NF-MMA-00003",
+   "face": "front",
+   "location": "malmo-telecom-room",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "MMA-RACK-1",
+   "role": "oob-switch",
+   "serial": "ARI-MMA-0001",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7010t-48"
+  },
+  "mma-patch-01": {
+   "asset_tag": "NF-MMA-00004",
+   "face": "front",
+   "location": "malmo-telecom-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "MMA-RACK-1",
+   "role": "patch-panel",
+   "serial": "GEN-MMA-0003",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "mma-rtr-01": {
+   "asset_tag": "NF-MMA-00005",
+   "face": "front",
+   "location": "malmo-telecom-room",
+   "position": 36.0,
+   "primary_ip4": "10.0.3.11/24",
+   "rack": "MMA-RACK-1",
+   "role": "core-router",
+   "serial": "JNP-MMA-0001",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "juniper-mx204"
+  },
+  "mma-sw-01": {
+   "asset_tag": "NF-MMA-00006",
+   "face": "front",
+   "location": "malmo-telecom-room",
+   "position": 35.0,
+   "primary_ip4": "10.0.3.12/24",
+   "rack": "MMA-RACK-1",
+   "role": "aggregation-switch",
+   "serial": "ARI-MMA-0002",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7050sx3-48yc8-f"
+  },
+  "mma-wdm-01": {
+   "asset_tag": "NF-MMA-00007",
+   "face": "front",
+   "location": "malmo-telecom-room",
+   "position": 32.0,
+   "primary_ip4": null,
+   "rack": "MMA-RACK-1",
+   "role": "wdm-terminal",
+   "serial": "SMO-MMA-0002",
+   "site": "nordfiber-malmo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "osl-dcp2-01": {
+   "asset_tag": "NF-OSL-00001",
+   "face": "front",
+   "location": "oslo-telecom-room",
+   "position": 28.0,
+   "primary_ip4": null,
+   "rack": "OSL-RACK-1",
+   "role": "wdm-client-shelf",
+   "serial": "SMO-OSL-0001",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-2"
+  },
+  "osl-mmr-nordfiber-01": {
+   "asset_tag": "NF-OSL-00002",
+   "face": "front",
+   "location": "oslo-meetme-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "OSL-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-OSL-0001",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "osl-mmr-skagerrak-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "oslo-meetme-room",
+   "position": 41.0,
+   "primary_ip4": null,
+   "rack": "OSL-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-OSL-0002",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "skagerrak-interconnect-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "osl-oob-01": {
+   "asset_tag": "NF-OSL-00003",
+   "face": "front",
+   "location": "oslo-telecom-room",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "OSL-RACK-1",
+   "role": "oob-switch",
+   "serial": "ARI-OSL-0001",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7010t-48"
+  },
+  "osl-patch-01": {
+   "asset_tag": "NF-OSL-00004",
+   "face": "front",
+   "location": "oslo-telecom-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "OSL-RACK-1",
+   "role": "patch-panel",
+   "serial": "GEN-OSL-0003",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "osl-rtr-01": {
+   "asset_tag": "NF-OSL-00005",
+   "face": "front",
+   "location": "oslo-telecom-room",
+   "position": 36.0,
+   "primary_ip4": "10.0.4.11/24",
+   "rack": "OSL-RACK-1",
+   "role": "core-router",
+   "serial": "JNP-OSL-0001",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "juniper-mx204"
+  },
+  "osl-sw-01": {
+   "asset_tag": "NF-OSL-00006",
+   "face": "front",
+   "location": "oslo-telecom-room",
+   "position": 35.0,
+   "primary_ip4": "10.0.4.12/24",
+   "rack": "OSL-RACK-1",
+   "role": "aggregation-switch",
+   "serial": "ARI-OSL-0002",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7050sx3-48yc8-f"
+  },
+  "osl-wdm-01": {
+   "asset_tag": "NF-OSL-00007",
+   "face": "front",
+   "location": "oslo-telecom-room",
+   "position": 32.0,
+   "primary_ip4": null,
+   "rack": "OSL-RACK-1",
+   "role": "wdm-terminal",
+   "serial": "SMO-OSL-0002",
+   "site": "nordfiber-oslo-pop",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "polaris-got-mmr-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-meetme-room",
+   "position": 38.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0004",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "polaris-got-srv-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 36.0,
+   "primary_ip4": "10.0.2.21/24",
+   "rack": "GOT-RACK-2",
+   "role": "server",
+   "serial": "DLL-GOT-0002",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "dell-poweredge-r650"
+  },
+  "polaris-got-sw-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-2",
+   "role": "access-switch",
+   "serial": "ARI-GOT-0004",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "arista-dcs-7010t-48"
+  },
+  "polaris-got-tor-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-2",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0005",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "polaris-sto-mmr-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "stockholm-meetme-room",
+   "position": 38.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-STO-0001",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "polaris-sto-srv-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "stockholm-suite-100-row-b",
+   "position": 36.0,
+   "primary_ip4": "10.0.1.21/24",
+   "rack": "STO-RACK-B1",
+   "role": "server",
+   "serial": "DLL-STO-0001",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "dell-poweredge-r650"
+  },
+  "polaris-sto-srv-02": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "stockholm-suite-100-row-b",
+   "position": 35.0,
+   "primary_ip4": "10.0.1.22/24",
+   "rack": "STO-RACK-B1",
+   "role": "server",
+   "serial": "DLL-STO-0002",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "dell-poweredge-r650"
+  },
+  "polaris-sto-sw-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "stockholm-suite-100-row-b",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-B1",
+   "role": "access-switch",
+   "serial": "ARI-STO-0001",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "arista-dcs-7010t-48"
+  },
+  "polaris-sto-tor-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "stockholm-suite-100-row-b",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-B1",
+   "role": "patch-panel",
+   "serial": "GEN-STO-0002",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "polaris-cloud-services",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "sto-dcp2-01": {
+   "asset_tag": "NF-STO-00001",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 28.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-A1",
+   "role": "wdm-client-shelf",
+   "serial": "SMO-STO-0001",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-2"
+  },
+  "sto-mmr-bfn-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "stockholm-meetme-room",
+   "position": 36.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-STO-0003",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "baltic-fibre-networks-ou",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "sto-mmr-nordfiber-01": {
+   "asset_tag": "NF-STO-00002",
+   "face": "front",
+   "location": "stockholm-meetme-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-STO-0004",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "sto-mmr-nsn-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "stockholm-meetme-room",
+   "position": 37.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-STO-0005",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordic-subsea-networks-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "sto-oob-01": {
+   "asset_tag": "NF-STO-00003",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-A1",
+   "role": "oob-switch",
+   "serial": "ARI-STO-0002",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7010t-48"
+  },
+  "sto-patch-01": {
+   "asset_tag": "NF-STO-00004",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-A1",
+   "role": "patch-panel",
+   "serial": "GEN-STO-0006",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "sto-rtr-01": {
+   "asset_tag": "NF-STO-00005",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 36.0,
+   "primary_ip4": "10.0.1.11/24",
+   "rack": "STO-RACK-A1",
+   "role": "core-router",
+   "serial": "JNP-STO-0001",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "juniper-mx204"
+  },
+  "sto-sw-01": {
+   "asset_tag": "NF-STO-00006",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 35.0,
+   "primary_ip4": "10.0.1.12/24",
+   "rack": "STO-RACK-A1",
+   "role": "aggregation-switch",
+   "serial": "ARI-STO-0003",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "arista-dcs-7050sx3-48yc8-f"
+  },
+  "sto-wdm-01": {
+   "asset_tag": "NF-STO-00007",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 32.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-A1",
+   "role": "wdm-terminal",
+   "serial": "SMO-STO-0002",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "sto-wdm-02": {
+   "asset_tag": "NF-STO-00008",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 31.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-A1",
+   "role": "wdm-terminal",
+   "serial": "SMO-STO-0003",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "sto-wdm-03": {
+   "asset_tag": "NF-STO-00009",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 30.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-A1",
+   "role": "wdm-terminal",
+   "serial": "SMO-STO-0004",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "sto-wdm-04": {
+   "asset_tag": "NF-STO-00010",
+   "face": "front",
+   "location": "stockholm-suite-100-row-a",
+   "position": 29.0,
+   "primary_ip4": null,
+   "rack": "STO-RACK-A1",
+   "role": "wdm-terminal",
+   "serial": "SMO-STO-0005",
+   "site": "nordfiber-stockholm-dc",
+   "status": "active",
+   "tenant": "nordfiber-ab",
+   "type": "smartoptics-dcp-m40-pam4-er"
+  },
+  "vasthamnen-got-mmr-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-meetme-room",
+   "position": 37.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0006",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "vasthamnen-logistics",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "vasthamnen-got-srv-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 36.0,
+   "primary_ip4": "10.0.2.22/24",
+   "rack": "GOT-RACK-3",
+   "role": "server",
+   "serial": "DLL-GOT-0003",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "vasthamnen-logistics",
+   "type": "dell-poweredge-r650"
+  },
+  "vasthamnen-got-sw-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 39.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-3",
+   "role": "access-switch",
+   "serial": "ARI-GOT-0005",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "vasthamnen-logistics",
+   "type": "arista-dcs-7010t-48"
+  },
+  "vasthamnen-got-tor-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-telecom-room",
+   "position": 42.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-3",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0007",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "vasthamnen-logistics",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  },
+  "vastkust-got-panel-01": {
+   "asset_tag": null,
+   "face": "front",
+   "location": "gothenburg-meetme-room",
+   "position": 36.0,
+   "primary_ip4": null,
+   "rack": "GOT-RACK-MMR1",
+   "role": "patch-panel",
+   "serial": "GEN-GOT-0008",
+   "site": "nordfiber-gothenburg-pop",
+   "status": "active",
+   "tenant": "vastkust-bredband-ab",
+   "type": "generic-lc-24-port-fiber-patch-panel"
+  }
+ },
+ "fms_fiber_cables": [
+  "rearport:got-patch-01:Port 1 <> rearport:sto-patch-01:Port 1",
+  "rearport:got-patch-01:Port 2 <> rearport:mma-patch-01:Port 2",
+  "rearport:mma-patch-01:Port 1 <> rearport:sto-patch-01:Port 2",
+  "rearport:osl-patch-01:Port 1 <> rearport:sto-patch-01:Port 3"
+ ],
+ "ip_addresses": {
+  "10.0.1.11/24": {
+   "assigned": "sto-rtr-01:fxp0",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.1.12/24": {
+   "assigned": "sto-sw-01:Management1",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.1.21/24": {
+   "assigned": "polaris-sto-srv-01:iDRAC9",
+   "tenant": "polaris-cloud-services"
+  },
+  "10.0.1.22/24": {
+   "assigned": "polaris-sto-srv-02:iDRAC9",
+   "tenant": "polaris-cloud-services"
+  },
+  "10.0.2.11/24": {
+   "assigned": "got-rtr-01:fxp0",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.2.12/24": {
+   "assigned": "got-sw-01:Management1",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.2.13/24": {
+   "assigned": "got-idf-sw-01:Management1",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.2.14/24": {
+   "assigned": "got-ws-erik:Gig-E 1",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.2.21/24": {
+   "assigned": "polaris-got-srv-01:iDRAC9",
+   "tenant": "polaris-cloud-services"
+  },
+  "10.0.2.22/24": {
+   "assigned": "vasthamnen-got-srv-01:iDRAC9",
+   "tenant": "vasthamnen-logistics"
+  },
+  "10.0.3.11/24": {
+   "assigned": "mma-rtr-01:fxp0",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.3.12/24": {
+   "assigned": "mma-sw-01:Management1",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.4.11/24": {
+   "assigned": "osl-rtr-01:fxp0",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.4.12/24": {
+   "assigned": "osl-sw-01:Management1",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.5.11/24": {
+   "assigned": "hel-rtr-01:fxp0",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.5.12/24": {
+   "assigned": "hel-sw-01:Management1",
+   "tenant": "nordfiber-ab"
+  },
+  "10.255.0.1/32": {
+   "assigned": "sto-rtr-01:lo0",
+   "tenant": null
+  },
+  "10.255.0.2/32": {
+   "assigned": "got-rtr-01:lo0",
+   "tenant": null
+  },
+  "10.255.0.3/32": {
+   "assigned": "mma-rtr-01:lo0",
+   "tenant": null
+  },
+  "10.255.0.4/32": {
+   "assigned": "osl-rtr-01:lo0",
+   "tenant": null
+  }
+ },
+ "locations": {
+  "gothenburg-idf-floor-3": {
+   "name": "IDF Floor 3",
+   "parent": null,
+   "site": "nordfiber-gothenburg-pop"
+  },
+  "gothenburg-meetme-room": {
+   "name": "MeetMe Room",
+   "parent": null,
+   "site": "nordfiber-gothenburg-pop"
+  },
+  "gothenburg-office-floor-3": {
+   "name": "Office Floor 3",
+   "parent": null,
+   "site": "nordfiber-gothenburg-pop"
+  },
+  "gothenburg-suite-200": {
+   "name": "Suite 200",
+   "parent": null,
+   "site": "nordfiber-gothenburg-pop"
+  },
+  "gothenburg-suite-200-row-c": {
+   "name": "Row C",
+   "parent": "gothenburg-suite-200",
+   "site": "nordfiber-gothenburg-pop"
+  },
+  "gothenburg-telecom-room": {
+   "name": "Telecom Room",
+   "parent": null,
+   "site": "nordfiber-gothenburg-pop"
+  },
+  "helsinki-meetme-room": {
+   "name": "MeetMe Room",
+   "parent": null,
+   "site": "nordfiber-helsinki-dc"
+  },
+  "helsinki-telecom-room": {
+   "name": "Telecom Room",
+   "parent": null,
+   "site": "nordfiber-helsinki-dc"
+  },
+  "malmo-meetme-room": {
+   "name": "MeetMe Room",
+   "parent": null,
+   "site": "nordfiber-malmo-pop"
+  },
+  "malmo-telecom-room": {
+   "name": "Telecom Room",
+   "parent": null,
+   "site": "nordfiber-malmo-pop"
+  },
+  "oslo-meetme-room": {
+   "name": "MeetMe Room",
+   "parent": null,
+   "site": "nordfiber-oslo-pop"
+  },
+  "oslo-telecom-room": {
+   "name": "Telecom Room",
+   "parent": null,
+   "site": "nordfiber-oslo-pop"
+  },
+  "stockholm-meetme-room": {
+   "name": "MeetMe Room",
+   "parent": null,
+   "site": "nordfiber-stockholm-dc"
+  },
+  "stockholm-suite-100": {
+   "name": "Suite 100",
+   "parent": null,
+   "site": "nordfiber-stockholm-dc"
+  },
+  "stockholm-suite-100-row-a": {
+   "name": "Row A",
+   "parent": "stockholm-suite-100",
+   "site": "nordfiber-stockholm-dc"
+  },
+  "stockholm-suite-100-row-b": {
+   "name": "Row B",
+   "parent": "stockholm-suite-100",
+   "site": "nordfiber-stockholm-dc"
+  }
+ },
+ "modules": [
+  "got-dcp2-01:slot-1/1:DCP-110",
+  "mma-dcp2-01:slot-1/1:DCP-110",
+  "osl-dcp2-01:slot-1/1:DCP-110",
+  "sto-dcp2-01:slot-1/1:DCP-110",
+  "sto-dcp2-01:slot-1/2:DCP-110"
+ ],
+ "pathways": {
+  "bb-cbl-00001-route": {
+   "comments": "Stockholm <-> Gothenburg via Vasteras, Orebro, Karlstad, Trollhattan",
+   "coordinates": [
+    [
+     18.0686,
+     59.3293
+    ],
+    [
+     16.5528,
+     59.6099
+    ],
+    [
+     15.2066,
+     59.2741
+    ],
+    [
+     13.5116,
+     59.3793
+    ],
+    [
+     12.2886,
+     58.2837
+    ],
+    [
+     11.9746,
+     57.7089
+    ]
+   ]
+  },
+  "bb-cbl-00002-route": {
+   "comments": "Stockholm <-> Malmo via the E4: Linkoping, Jonkoping, Markaryd, Hassleholm, Lund",
+   "coordinates": [
+    [
+     18.0686,
+     59.3293
+    ],
+    [
+     15.6214,
+     58.4108
+    ],
+    [
+     14.1618,
+     57.7826
+    ],
+    [
+     13.5975,
+     56.4402
+    ],
+    [
+     13.766,
+     56.159
+    ],
+    [
+     13.191,
+     55.7047
+    ],
+    [
+     12.9819,
+     55.5636
+    ]
+   ]
+  },
+  "bb-cbl-00003-route": {
+   "comments": "Stockholm <-> Oslo (leased, Polarlink Transit) via Vasteras, Orebro, Karlstad, Charlottenberg",
+   "coordinates": [
+    [
+     18.0686,
+     59.3293
+    ],
+    [
+     16.5528,
+     59.6099
+    ],
+    [
+     15.2066,
+     59.2741
+    ],
+    [
+     13.5116,
+     59.3793
+    ],
+    [
+     12.2942,
+     59.89
+    ],
+    [
+     10.7522,
+     59.9139
+    ]
+   ]
+  }
+ },
+ "prefixes": {
+  "10.0.1.0/24": {
+   "description": "Out-of-band management network, Nordfiber Stockholm DC",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.2.0/24": {
+   "description": "Out-of-band management network, Nordfiber Gothenburg PoP",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.3.0/24": {
+   "description": "Out-of-band management network, Nordfiber Malmö PoP",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.4.0/24": {
+   "description": "Out-of-band management network, Nordfiber Oslo PoP",
+   "tenant": "nordfiber-ab"
+  },
+  "10.0.5.0/24": {
+   "description": "Out-of-band management network, Nordfiber Helsinki DC",
+   "tenant": "nordfiber-ab"
+  }
+ },
+ "providers": {
+  "baltic-fibre-networks-ou": {
+   "description": "Fictional Baltic-states fiber transit vendor. Leases Route 2 (Stockholm-Gotland-Riga-Tallinn-Helsinki) to Nordfiber AB.",
+   "name": "Baltic Fibre Networks OU"
+  },
+  "nordfiber-ab": {
+   "description": "Nordfiber acting as a provider: the circuits it sells to its own customers.",
+   "name": "Nordfiber AB"
+  },
+  "nordic-subsea-networks-ab": {
+   "description": "Fictional Nordic submarine/terrestrial fiber transit vendor. Leases Route 1 (Stockholm-Mariehamn-Vaasa-Helsinki) to Nordfiber AB.",
+   "name": "Nordic Subsea Networks AB"
+  },
+  "polarlink-transit": {
+   "description": "Fictional pan-Nordic wholesale dark fiber and transit provider. Leases a cross-border dark fiber pair to Nordfiber AB for the Stockholm-Oslo route.",
+   "name": "Polarlink Transit"
+  },
+  "vastkust-bredband-ab": {
+   "description": "Fictional regional Internet transit provider. Supplies Nordfiber AB's own upstream Internet access at the Gothenburg PoP.",
+   "name": "Vastkust Bredband AB"
+  }
+ },
+ "racks": {
+  "GOT-RACK-1": {
+   "location": "gothenburg-telecom-room",
+   "site": "nordfiber-gothenburg-pop",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "GOT-RACK-2": {
+   "location": "gothenburg-telecom-room",
+   "site": "nordfiber-gothenburg-pop",
+   "tenant": "polaris-cloud-services",
+   "u_height": 42
+  },
+  "GOT-RACK-3": {
+   "location": "gothenburg-telecom-room",
+   "site": "nordfiber-gothenburg-pop",
+   "tenant": "vasthamnen-logistics",
+   "u_height": 42
+  },
+  "GOT-RACK-C1": {
+   "location": "gothenburg-suite-200-row-c",
+   "site": "nordfiber-gothenburg-pop",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "GOT-RACK-C2": {
+   "location": "gothenburg-suite-200-row-c",
+   "site": "nordfiber-gothenburg-pop",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "GOT-RACK-IDF3": {
+   "location": "gothenburg-idf-floor-3",
+   "site": "nordfiber-gothenburg-pop",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "GOT-RACK-MMR1": {
+   "location": "gothenburg-meetme-room",
+   "site": "nordfiber-gothenburg-pop",
+   "tenant": "skagerrak-interconnect-ab",
+   "u_height": 42
+  },
+  "HEL-RACK-1": {
+   "location": "helsinki-telecom-room",
+   "site": "nordfiber-helsinki-dc",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "HEL-RACK-MMR1": {
+   "location": "helsinki-meetme-room",
+   "site": "nordfiber-helsinki-dc",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "MMA-RACK-1": {
+   "location": "malmo-telecom-room",
+   "site": "nordfiber-malmo-pop",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "MMA-RACK-MMR1": {
+   "location": "malmo-meetme-room",
+   "site": "nordfiber-malmo-pop",
+   "tenant": "oresund-exchange-ab",
+   "u_height": 42
+  },
+  "OSL-RACK-1": {
+   "location": "oslo-telecom-room",
+   "site": "nordfiber-oslo-pop",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "OSL-RACK-MMR1": {
+   "location": "oslo-meetme-room",
+   "site": "nordfiber-oslo-pop",
+   "tenant": "skagerrak-interconnect-ab",
+   "u_height": 42
+  },
+  "STO-RACK-A1": {
+   "location": "stockholm-suite-100-row-a",
+   "site": "nordfiber-stockholm-dc",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  },
+  "STO-RACK-B1": {
+   "location": "stockholm-suite-100-row-b",
+   "site": "nordfiber-stockholm-dc",
+   "tenant": "polaris-cloud-services",
+   "u_height": 42
+  },
+  "STO-RACK-MMR1": {
+   "location": "stockholm-meetme-room",
+   "site": "nordfiber-stockholm-dc",
+   "tenant": "nordfiber-ab",
+   "u_height": 42
+  }
+ },
+ "secrets": [
+  "got-rtr-01:local-admin",
+  "mma-rtr-01:local-admin",
+  "osl-rtr-01:local-admin",
+  "sto-rtr-01:local-admin"
+ ],
+ "sites": {
+  "nordfiber-gothenburg-pop": {
+   "description": "Second full datacenter (upgraded from a west coast point of presence, Phase 16).",
+   "facility": "GOT1",
+   "group": "data-centers",
+   "name": "Nordfiber Gothenburg DC",
+   "region": "sweden",
+   "tenant": "nordfiber-ab"
+  },
+  "nordfiber-helsinki-dc": {
+   "description": "Third datacenter — smaller footprint, reached from Stockholm over two independently-routed leased dark fiber pairs.",
+   "facility": "HEL1",
+   "group": "data-centers",
+   "name": "Nordfiber Helsinki DC",
+   "region": "finland",
+   "tenant": "nordfiber-ab"
+  },
+  "nordfiber-malmo-pop": {
+   "description": "Southern point of presence, near the Öresund Bridge crossing to Denmark.",
+   "facility": "MMA1",
+   "group": "points-of-presence",
+   "name": "Nordfiber Malmö PoP",
+   "region": "sweden",
+   "tenant": "nordfiber-ab"
+  },
+  "nordfiber-oslo-pop": {
+   "description": "Cross-border point of presence into Norway.",
+   "facility": "OSL1",
+   "group": "points-of-presence",
+   "name": "Nordfiber Oslo PoP",
+   "region": "norway",
+   "tenant": "nordfiber-ab"
+  },
+  "nordfiber-stockholm-dc": {
+   "description": "Primary data center and network core (HQ).",
+   "facility": "STO1",
+   "group": "data-centers",
+   "name": "Nordfiber Stockholm DC",
+   "region": "sweden",
+   "tenant": "nordfiber-ab"
+  }
+ },
+ "tenants": {
+  "baltic-fibre-networks-ou": {
+   "description": "Fictional Baltic-states fiber transit vendor (Phase 17); also a Tenant since Phase 19 so it can own demarc panels at both ends of its leased route.",
+   "group": "suppliers",
+   "name": "Baltic Fibre Networks OU"
+  },
+  "baltic-retail-group": {
+   "description": "Nordic retail chain. Leases inter-site WAN connectivity between its Stockholm and Malmö distribution centers.",
+   "group": "customers",
+   "name": "Baltic Retail Group"
+  },
+  "fjord-media-networks": {
+   "description": "Broadcast/media company. Leases a high-bandwidth wavelength service between Oslo and Stockholm.",
+   "group": "customers",
+   "name": "Fjord Media Networks"
+  },
+  "nordfiber-ab": {
+   "description": "Regional fiber-optic network operator headquartered in Stockholm. Owns all sites and core infrastructure in this dataset.",
+   "group": "internal",
+   "name": "Nordfiber AB"
+  },
+  "nordic-subsea-networks-ab": {
+   "description": "Fictional Nordic fiber transit vendor (Phase 17); also a Tenant since Phase 19 so it can own demarc panels at both ends of its leased route.",
+   "group": "suppliers",
+   "name": "Nordic Subsea Networks AB"
+  },
+  "oresund-exchange-ab": {
+   "description": "Fictional carrier-neutral facility operator at Malmo, distinct from Skagerrak (Gothenburg/Oslo). Nordfiber colocates there as a customer, not an owner.",
+   "group": "facility-operators",
+   "name": "Oresund Exchange AB"
+  },
+  "polaris-cloud-services": {
+   "description": "Cloud hosting provider. Colocates compute racks at the Stockholm DC and Gothenburg PoP.",
+   "group": "customers",
+   "name": "Polaris Cloud Services"
+  },
+  "skagerrak-interconnect-ab": {
+   "description": "Fictional carrier-neutral facility operator. Operates the MeetMe/cross-connect rooms; Nordfiber and its colo customers are all customers of this facility, not owners of the room.",
+   "group": "facility-operators",
+   "name": "Skagerrak Interconnect AB"
+  },
+  "vasthamnen-logistics": {
+   "description": "Port logistics and container-tracking operator. Colocates edge-compute servers at the Gothenburg PoP for real-time IoT telemetry from Port of Gothenburg operations.",
+   "group": "customers",
+   "name": "Västhamnen Logistics"
+  },
+  "vastkust-bredband-ab": {
+   "description": "Nordfiber's upstream Internet transit supplier (Phase 9), also modeled as a Tenant here (Phase 13) so its own MeetMe-room panel can be owned by it.",
+   "group": "suppliers",
+   "name": "Vastkust Bredband AB"
+  }
+ },
+ "wdm": {
+  "circuits": {
+   "Baltic Retail Group Backup - Segment 1 (Stockholm-Gothenburg)": {
+    "status": "active",
+    "tenant": 2
+   },
+   "Baltic Retail Group Backup - Segment 2 (Gothenburg-Malmo)": {
+    "status": "active",
+    "tenant": 2
+   },
+   "Fjord Media Networks - Wavelength Service": {
+    "status": "active",
+    "tenant": 5
+   }
+  },
+  "nodes": {
+   "got-wdm-01": 40,
+   "got-wdm-02": 40,
+   "hel-wdm-01": 40,
+   "hel-wdm-02": 40,
+   "mma-wdm-01": 40,
+   "osl-wdm-01": 40,
+   "sto-wdm-01": 40,
+   "sto-wdm-02": 40,
+   "sto-wdm-03": 40,
+   "sto-wdm-04": 40
+  },
+  "wavelength_path_rows": 3
+ }
+}
