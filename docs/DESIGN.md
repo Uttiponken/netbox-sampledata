@@ -14,6 +14,52 @@ repository, `netbox-sampledata`, so the dataset isn't coupled to any one
 NetBox deployment — it's a client of the REST API of *any* reachable NetBox
 instance, pointed at via `NETBOX_URL`/`NETBOX_TOKEN` in `.env`.
 
+## The layered rewrite (2026-10-02)
+
+The dataset was first built as 22 numbered "phase" scripts, each added when
+a requirement appeared; later phases retrofitted earlier ones (deleting and
+re-creating cables, moving devices), so the scripts could only be replayed
+in order and no script described a final state. After an audit the build was
+rewritten as seven layers that each describe the **final state directly**,
+driven by plain-Python data modules, and replayed on an empty NetBox:
+
+- `01_organization` · `02_hardware` · `03_cabling` · `04_transport` ·
+  `05_optical` · `06_services` · `07_finalize`, plus `verify.py` and
+  `build.py`. Data lives in `data/`, the naming convention in `naming.py`,
+  site/rack/device generation in `layout.py`, cable rules in `cabling.py`.
+- Sites are profiles (`dc` = redundant pair, `pop` = single pair with
+  slots reserved) so every site of a kind is generated, not hand-written.
+- The audit's findings were built in: uniform rack slots; every
+  management port cabled to an OOB switch; cable type/colour/length/label
+  and per-end labels (`label_a`/`label_b` custom fields) set at creation
+  under the rules in `docs/INFRASTRUCTURE.md` §8; one naming scheme;
+  redundant router/switch pairs at the datacenters; Helsinki brought to
+  parity with the other sites (management addressing, loopback and iBGP,
+  credential, contacts, DCP-2 shelf); a real west-coast route for
+  `bb-cbl-00004` and routes plus fiber-plant records for the two leased
+  Helsinki spans; geography for every long-haul cable.
+- **Verification.** Before the rewrite the live state was dumped to
+  `reference/state-before-refactor.json` (`tools/dump_state.py`). After the
+  replay `tools/diff_state.py` (which applies the intended renames and
+  ignores the redefined cable attributes) showed 97 of 106 cables
+  identical and every remaining difference accounted for: renames, uniform
+  slots, the new redundant equipment and its cabling, tenant rule changes
+  on vendor jumpers, Helsinki parity, descriptions cleaned of "Phase N" and
+  stale text, diacritics restored in names (Västkust, Öresund, Baltic Fibre
+  Networks OÜ). Serials and asset tags are renumbered by the new creation
+  order (deterministic, but not the old numbers).
+- **Old scripts.** The 22 numbered scripts and `config.py` are removed; the
+  state they produced is preserved in `reference/` and in git (commit
+  `8f65e89`) and `archive/legacy-numbered-phases-2026-10-02.tar.gz`.
+
+The phase log below is kept as the **history** of how the dataset and its
+workarounds came about — the scripts it names no longer exist, and its
+"Phase N" numbering is not used anywhere in the dataset itself. The
+upstream-plugin findings it records (WDM channel plan before devices,
+placeholder wavelengths, the duplicate-path bug, the `/trace/` limitation,
+the front-port mapping fields, the secrets session key) are all still true
+and are handled in the new layers.
+
 ## Goal
 
 An educational dataset for a fresh NetBox install, built in stages that
@@ -51,18 +97,20 @@ Three options were considered:
 
 ## Idempotency strategy
 
-Every phase script is safe to re-run. `common.get_or_create()` looks an
-object up by its natural key (slug for most models, name for Contacts —
-NetBox doesn't slug contacts) before creating it. This means:
+Every layer script is safe to re-run, and *reconciling*. `common.ensure()`
+looks an object up by its natural key (slug, name, cid, ...), creates it if
+missing, and otherwise **updates any declared field that has drifted**.
+Fields that can only be decided at creation time (rack placement, which
+would otherwise shuffle a hand-adjusted rack) are passed in `once=` and are
+never touched again. Cables go through `Cabler.connect()`, which does the
+same for cable attributes and refuses, loudly, to touch a port that is
+already cabled to something other than what the plan says.
 
-- Running phase N twice never creates duplicates.
-- Adding a new object to `config.py` and re-running only creates the new
-  thing; everything else reports `[exists]`.
-- There's no separate "has this already run" state to track — the NetBox
-  instance itself is the source of truth for what exists.
-
-Verified for Phase 1: first run created all 39 objects; the immediate
-re-run reported all 39 as `[exists]` and created zero.
+The earlier phase scripts used a create-only `get_or_create()`. That was the
+root cause of several bugs (editing the data never reached an object that
+already existed; a retrofit script could silently reconcile the wrong
+cable), and is what the layered rewrite below fixed. The NetBox instance is
+still the only state: there is no "has this run" bookkeeping.
 
 ## The NetBox 4.5+ API token format (a real gotcha, documented in full)
 
@@ -1485,25 +1533,10 @@ any later cable save on WDM topology can regrow the rows; re-run it.
 
 ---
 
-## Status: all 7 originally planned phases complete, plus 15 more built since
+## Status
 
-Organization → Infrastructure → Connections → Circuits → FMS → WDM → BGP/
-Secrets/Inventory, each phase verified with real functional checks (cable
-tracing, wavelength stitching, encryption round-trips) rather than
-existence checks alone — plus fifteen user-requested phases built since (a
-DWDM backup path with electrical regeneration, a NOC engineer's physical
-workplace plus a standalone Internet circuit, a WDM client demarc shelf
-retrofitted onto every existing tenant handoff, a colo cross-connect
-re-architecture through a MeetMe room, a correction giving that room
-proper third-party ownership at every PoP, the same MeetMe demarc pattern
-applied to Nordfiber's own upstream Internet provider, every WDM node's
-full 40-channel capacity populated, a 10x capacity upgrade for Baltic
-Retail Group, Gothenburg's promotion to a full Datacenter, a third
-datacenter in Helsinki reached over two geographically-diverse leased
-dark fiber pairs with real PostGIS route data, real PostGIS route
-geography for the original domestic backbone fiber too, and that
-Helsinki link fully lit end to end through its own MeetMe room, a uniform rack layout with cabled out-of-band management, asset identity, and a prune of spurious wavelength paths). The
-dataset remains fully config-driven and incremental — see "Possible
-future extensions" in `README.md` for what was deliberately deferred and
-why, none of which is required for what's here to already be a complete,
-working demonstration.
+Built by the layered scripts (`build.py`): 5 sites, 16 racks, 69 devices,
+131 cables, 6 circuits, 3 wavelength services, with `verify.py` passing on a
+fresh replay. See `README.md` for usage and `docs/INFRASTRUCTURE.md` for the
+finished dataset. What was deliberately left out is listed in `README.md`
+under "Not modeled, on purpose".

@@ -1,163 +1,104 @@
 #!/usr/bin/env python3
 """
-Phase 1: Organization.
+Layer 1 — organization: who and where.
 
-Creates, in NetBox's own dependency order:
-  tenant groups -> tenants -> regions -> site groups -> sites -> locations
-  -> contact groups -> contact roles -> contacts -> contact assignments
+Tenant groups and tenants (Nordfiber, customers, facility operators,
+suppliers), regions, site groups, sites (generated from the DC/PoP profiles),
+one Location per room, contact groups/roles/contacts, and the contact
+assignments that point at sites and tenants. (Assignments to racks and
+devices are made in layer 2, once those exist.)
 
-Safe to re-run: every object is looked up by its slug (or, for contacts,
-name) before being created.
+Safe to re-run: every object is created or reconciled by ensure().
 """
 
-from common import connect, get_or_create, report
-from config import (
-    CONTACT_ASSIGNMENTS,
-    CONTACT_GROUPS,
-    CONTACT_ROLES,
-    CONTACTS,
-    LOCATIONS,
-    REGIONS,
-    SITE_GROUPS,
-    SITES,
-    TENANT_GROUPS,
-    TENANTS,
+from collections import Counter
+
+import naming
+from common import assign_contact, connect, ensure, report
+from data.organization import (
+    CONTACT_ASSIGNMENTS, CONTACT_GROUPS, CONTACT_ROLES, CONTACTS, REGIONS, SITE_GROUPS, SITES, TENANT_GROUPS, TENANTS,
 )
+from layout import rooms_for
 
 
 def run(nb):
-    print("== Tenant groups ==")
-    tenant_groups = {}
-    for tg in TENANT_GROUPS:
-        obj, created = get_or_create(nb.tenancy.tenant_groups, {"slug": tg["slug"]}, **tg)
-        report("tenant group", obj, created)
-        tenant_groups[tg["slug"]] = obj
-
-    print("== Tenants ==")
+    print("== Tenant groups / tenants ==")
+    groups = {}
+    for g in TENANT_GROUPS:
+        obj, st = ensure(nb.tenancy.tenant_groups, {"slug": g["slug"]}, **g)
+        report("tenant group", obj, st)
+        groups[g["slug"]] = obj
     tenants = {}
     for t in TENANTS:
-        obj, created = get_or_create(
-            nb.tenancy.tenants,
-            {"slug": t["slug"]},
-            name=t["name"],
-            slug=t["slug"],
-            group=tenant_groups[t["group_slug"]].id,
-            description=t["description"],
-        )
-        report("tenant", obj, created)
-        tenants[t["slug"]] = obj
+        obj, st = ensure(nb.tenancy.tenants, {"slug": t["slug"]}, name=t["name"], slug=t["slug"],
+                         group=groups[t["group"]].id, description=t["description"])
+        report("tenant", obj, st)
+        tenants[t["code"]] = obj
 
-    print("== Regions ==")
+    print("== Regions / site groups ==")
     regions = {}
     for r in REGIONS:
-        fields = {"name": r["name"], "slug": r["slug"]}
-        if r["parent_slug"]:
-            fields["parent"] = regions[r["parent_slug"]].id
-        obj, created = get_or_create(nb.dcim.regions, {"slug": r["slug"]}, **fields)
-        report("region", obj, created)
+        obj, st = ensure(nb.dcim.regions, {"slug": r["slug"]}, name=r["name"], slug=r["slug"],
+                         parent=regions[r["parent"]].id if r["parent"] else None)
+        report("region", obj, st)
         regions[r["slug"]] = obj
-
-    print("== Site groups ==")
     site_groups = {}
-    for sg in SITE_GROUPS:
-        obj, created = get_or_create(nb.dcim.site_groups, {"slug": sg["slug"]}, **sg)
-        report("site group", obj, created)
-        site_groups[sg["slug"]] = obj
+    for g in SITE_GROUPS:
+        obj, st = ensure(nb.dcim.site_groups, {"slug": g["slug"]}, **g)
+        report("site group", obj, st)
+        site_groups[g["slug"]] = obj
 
-    print("== Sites ==")
+    print("== Sites and rooms ==")
     sites = {}
     for s in SITES:
-        obj, created = get_or_create(
-            nb.dcim.sites,
-            {"slug": s["slug"]},
-            name=s["name"],
-            slug=s["slug"],
-            status=s["status"],
-            region=regions[s["region_slug"]].id,
-            group=site_groups[s["group_slug"]].id,
-            tenant=tenants[s["tenant_slug"]].id,
-            facility=s["facility"],
-            physical_address=s["physical_address"],
-            time_zone=s["time_zone"],
-            latitude=s["latitude"],
-            longitude=s["longitude"],
+        group = "data-centers" if s["kind"] == "dc" else "points-of-presence"
+        obj, st = ensure(
+            nb.dcim.sites, {"slug": naming.site_slug(s)},
+            name=s["name"], slug=naming.site_slug(s), status="active", region=regions[s["region"]].id,
+            group=site_groups[group].id, tenant=tenants["nordfiber"].id, facility=s["facility"],
+            physical_address=s["address"], time_zone=s["tz"], latitude=s["lat"], longitude=s["lon"],
             description=s["description"],
         )
-        report("site", obj, created)
-        sites[s["slug"]] = obj
-
-    print("== Locations ==")
-    locations = {}
-    for loc in LOCATIONS:
-        fields = {
-            "name": loc["name"],
-            "slug": loc["slug"],
-            "site": sites[loc["site_slug"]].id,
-        }
-        if loc["parent_slug"]:
-            fields["parent"] = locations[loc["parent_slug"]].id
-        obj, created = get_or_create(nb.dcim.locations, {"slug": loc["slug"]}, **fields)
-        report("location", obj, created)
-        locations[loc["slug"]] = obj
-
-    print("== Contact groups ==")
-    contact_groups = {}
-    for cg in CONTACT_GROUPS:
-        obj, created = get_or_create(nb.tenancy.contact_groups, {"slug": cg["slug"]}, **cg)
-        report("contact group", obj, created)
-        contact_groups[cg["slug"]] = obj
-
-    print("== Contact roles ==")
-    contact_roles = {}
-    for cr in CONTACT_ROLES:
-        obj, created = get_or_create(nb.tenancy.contact_roles, {"slug": cr["slug"]}, **cr)
-        report("contact role", obj, created)
-        contact_roles[cr["slug"]] = obj
+        report("site", obj, st)
+        sites[s["code"]] = obj
+        for room in rooms_for(s):
+            name, _ = naming.ROOMS[room]
+            loc, st = ensure(nb.dcim.locations, {"slug": naming.room_slug(s, room)},
+                             name=name, slug=naming.room_slug(s, room), site=obj.id)
+            report("room", loc, st, s["code"])
 
     print("== Contacts ==")
+    cgroups = {}
+    for g in CONTACT_GROUPS:
+        obj, st = ensure(nb.tenancy.contact_groups, {"slug": g["slug"]}, **g)
+        report("contact group", obj, st)
+        cgroups[g["slug"]] = obj
+    croles = {}
+    for r in CONTACT_ROLES:
+        obj, st = ensure(nb.tenancy.contact_roles, {"slug": r["slug"]}, **r)
+        report("contact role", obj, st)
+        croles[r["slug"]] = obj
     contacts = {}
     for c in CONTACTS:
-        obj, created = get_or_create(
-            nb.tenancy.contacts,
-            {"name": c["name"]},
-            name=c["name"],
-            groups=[contact_groups[c["group_slug"]].id],
-            title=c["title"],
-            email=c["email"],
-            phone=c["phone"],
-        )
-        report("contact", obj, created)
+        obj, st = ensure(nb.tenancy.contacts, {"name": c["name"]}, name=c["name"], groups=[cgroups[c["group"]].id],
+                         title=c["title"], email=c["email"], phone=c["phone"])
+        report("contact", obj, st)
         contacts[c["name"]] = obj
 
-    print("== Contact assignments ==")
-    for ca in CONTACT_ASSIGNMENTS:
-        if ca["object_type"] == "dcim.site":
-            object_id = sites[ca["site_slug"]].id
-        elif ca["object_type"] == "tenancy.tenant":
-            object_id = tenants[ca["tenant_slug"]].id
+    counts = Counter()
+    for a in CONTACT_ASSIGNMENTS:
+        if a["kind"] == "site":
+            ot, oid = "dcim.site", sites[a["ref"]].id
+        elif a["kind"] == "tenant":
+            ot, oid = "tenancy.tenant", tenants[a["ref"]].id
         else:
-            raise ValueError(f"Unhandled object_type in config: {ca['object_type']}")
-
-        existing = nb.tenancy.contact_assignments.filter(
-            contact_id=contacts[ca["contact"]].id,
-            object_type=ca["object_type"],
-            object_id=object_id,
-        )
-        existing = list(existing)
-        if existing:
-            report("contact assignment", existing[0], False)
-            continue
-        obj = nb.tenancy.contact_assignments.create(
-            object_type=ca["object_type"],
-            object_id=object_id,
-            contact=contacts[ca["contact"]].id,
-            role=contact_roles[ca["role_slug"]].id,
-        )
-        report("contact assignment", obj, True)
+            continue  # rack/device assignments are made in layer 2
+        counts[assign_contact(nb, contacts[a["contact"]], croles[a["role"]], ot, oid)] += 1
+    print(f"  contact assignments (sites/tenants): {dict(counts)}")
 
 
 if __name__ == "__main__":
     nb = connect()
     print(f"Connected to {nb.base_url}\n")
     run(nb)
-    print("\nPhase 1 (Organization) complete.")
+    print("\nLayer 1 (organization) complete.")
