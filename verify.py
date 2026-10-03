@@ -105,7 +105,11 @@ def run(nb):
         cf = c.custom_fields or {}
         if not (cf.get("label_a") or "").startswith(f"{c.label} ->") or not (cf.get("label_b") or "").startswith(f"{c.label} ->"):
             bad["ends"].append(c.label)
-        if str(c.type) not in colour or c.color != colour[str(c.type)]:
+        rear = [t.object for t in ends if t.object_type == "dcim.rearport"]
+        trunk = len(rear) == 2 and all(r.name == "Trunk" for r in rear)
+        # trunks are green inside a site and blue between sites; other fiber is yellow
+        want = ("2196f3" if len(sites) > 1 else "4caf50") if trunk else colour.get(str(c.type))
+        if str(c.type) not in colour or c.color != want:
             bad["type"].append(c.label)
         if not has_ct and not c.length:
             bad["length"].append(c.label)

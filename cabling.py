@@ -5,6 +5,8 @@ Every cable in the dataset goes through Cabler.connect(), which decides —
 from the two endpoints alone — everything about it, at creation time:
 
   type / colour   copper TP -> cat6 (cat6a to a workstation), gray
+                  24-pair trunk between two patch panels (rear port to rear port) -> smf-os2, green; blue
+                  when the two panels are at different sites
                   rack-to-rack DAC between network devices -> dac-passive, black
                   anything with an LC fiber end, or a circuit termination -> smf-os2, yellow
   length          same rack: 2 m, or 3 m if the devices are more than 20U apart
@@ -31,7 +33,7 @@ import naming
 from common import _same, port
 from data.organization import SITES
 
-GRAY, YELLOW, BLACK = "9e9e9e", "ffeb3b", "111111"
+GRAY, YELLOW, BLACK, GREEN, BLUE = "9e9e9e", "ffeb3b", "111111", "4caf50", "2196f3"
 NETWORK_ROLES = {"core-router", "aggregation-switch", "oob-switch"}
 COPPER_TYPES = ("1000base-t", "100base-tx", "10gbase-t")
 
@@ -94,6 +96,9 @@ class Cabler:
         return e["dev"].site.slug if e["dev"] else None
 
     def _kind(self, a, b):
+        if (a["kind"] == b["kind"] == "rearport" and a["obj"].name == "Trunk" and b["obj"].name == "Trunk"):
+            # a 24-pair trunk between two patch panels: blue between sites, green inside one
+            return "smf-os2", (BLUE if a["dev"].site.id != b["dev"].site.id else GREEN)
         if a["kind"] == "ct" or b["kind"] == "ct":
             return "smf-os2", YELLOW
         if a["kind"] != "interface" or b["kind"] != "interface":

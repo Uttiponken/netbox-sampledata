@@ -196,7 +196,7 @@ Decided in one place (`cabling.py`) so every cable gets them at creation:
 
 | | Rule |
 |---|---|
-| Type, colour | copper twisted pair: **Cat6 gray** (Cat6A for the workstation) · DAC between network devices in one rack: **passive DAC black** · anything with an LC end or a circuit termination: **single-mode OS2 yellow** |
+| Type, colour | copper twisted pair: **Cat6 gray** (Cat6A for the workstation) · DAC between network devices in one rack: **passive DAC black** · a 24-pair trunk between two patch panels: **single-mode OS2 green**, or **blue** when the panels are at different sites · any other cable with an LC end or a circuit termination: **single-mode OS2 yellow** |
 | Length | same rack: **2 m**, or **3 m** if the equipment is more than 20U apart · same room, other rack: 5 m · other room in the building: 30 m · floor riser or office run: 40 m / 30 m · between sites: the route length in km · circuit demarc: none |
 | Label | `<site>-cbl-NNNNN` / `bb-cbl-NNNNN`, in creation order, never reassigned |
 | End labels | custom fields **`label_a`** and **`label_b`**: `<cable id> -> <far end>`, what to print at each end |
