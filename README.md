@@ -32,7 +32,7 @@ before it, plus an invariant check:
 | `01_organization.py` | Tenant groups, tenants, regions, site groups, sites, one Location per room, contacts and their assignments |
 | `02_hardware.py` | Manufacturers, device and module types (fetched live from the NetBox community library), the WDM profile and its 40-channel plan, roles, racks, devices (placed in uniform rack slots, with serials and asset tags), DCP-110 modules |
 | `03_cabling.py` | Cabling inside each building: core interconnects (full redundancy mesh at datacenters), out-of-band management, MeetMe-room jumpers and trunks, colo customers' chains, the Gothenburg office floor |
-| `04_transport.py` | Providers, circuits, the long-haul cables (own backbone, the leased Oslo pair, the two leased spans to Helsinki) with their fiber plant (netbox-fms) and routes (netbox-pathways), circuit geometries, cabled circuit demarcs |
+| `04_transport.py` | Providers, circuits, the long-haul cables (own backbone, the leased Oslo pair, the two leased spans to Helsinki) with their fiber plant (netbox-fms: cable records, every strand landed on its panel port, a fiber circuit for each trunk pair in use) and routes (netbox-pathways), circuit geometries, cabled circuit demarcs |
 | `05_optical.py` | WDM line ports and cabling, DCP-2 client shelves, backbone handoffs, regeneration jumper, the three wavelength services (netbox-wdm) |
 | `06_services.py` | Management prefixes and addresses, loopbacks and iBGP full mesh (netbox-bgp), device credentials (netbox-secrets), spare assets (netbox-inventory) |
 | `07_finalize.py` | Prunes the duplicate wavelength paths netbox-wdm generates, re-checks stitching, prints totals |

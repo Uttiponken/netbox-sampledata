@@ -92,6 +92,16 @@ length.
 | `bb-cbl-00005` | Stockholm – Helsinki, **NSN-DF-0001** (Nordic Subsea Networks), between the vendor's two MeetMe panels | Mariehamn (Åland), Vaasa | 850 km |
 | `bb-cbl-00006` | Stockholm – Helsinki, **BFN-DF-0001** (Baltic Fibre Networks), between the vendor's two MeetMe panels | Visby (Gotland), Riga, Tallinn | 907 km |
 
+**Strands and fiber circuits.** A trunk panel's duplex LC port *n* carries pair *n*, so strands 2*n*-1 and 2*n* of the
+48 (netbox-fms `FiberStrand`) are landed on port *n* of the panel at each end; the strand records give the tube and
+fiber and the colour to look for (DIN/IEC 60304). Each trunk pair that is in use has a **fiber circuit** (2 strands,
+two circuit paths from the same duplex port, wavelength 1550 nm, with the end-to-end loss of the bare fiber at
+0.21 dB/km plus 1.5 dB of connectors): `NF-FC-0001` Stockholm–Gothenburg, `-0002` Stockholm–Oslo, `-0003`
+Gothenburg–Malmö, `-0004` Stockholm–Helsinki over NSN and `-0005` over BFN, all pair 1. A circuit runs from the line
+panel port of one muxponder to that of the other (`LINE_PATCH`); netbox-fms follows the glass from there, so the two
+Helsinki circuits run through both MeetMe rooms and the leased trunk. The Stockholm–Malmö trunk has no pair in use
+and so no circuit.
+
 A leased circuit (`PLT-100234`, `NSN-DF-0001`, `BFN-DF-0001`) is a
 commercial record whose terminations stay **uncabled**; the glass is the
 single direct Cable (a Cable is physical connectivity, a Circuit is the

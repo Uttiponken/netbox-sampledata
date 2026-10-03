@@ -122,3 +122,27 @@ FIBER_DETAILS = {
     "bfn": {"serial_number": "CNG-ALTOS24-0006", "install_date": "2024-02-14", "installer": "bfn"},
 }
 FMS_BUFFER_TUBES = [{"name": f"Tube {n}", "position": n, "fiber_count": 12} for n in range(1, 5)]   # 4 x 12 = 48
+
+# A duplex LC port on a trunk panel carries one PAIR of the trunk: strands 2n-1 and 2n of the 48 land on port n at
+# both ends (netbox-fms FiberStrand.front_port_a / front_port_b).
+#
+# FMS fiber circuits: one per trunk pair that is actually in use, from the line panel port of one muxponder to the
+# line panel port of the other (data/optical.py LINE_PATCH). A circuit is 2 strands (a duplex pair), so it has two
+# circuit paths, both starting at the same duplex port. FMS follows the glass from there, including the MeetMe jumpers
+# of the Helsinki links. `trunk` is the long-haul cable (bb<n> as in LONG_HAUL) that gives the glass length.
+# Loss and wavelength are the end-to-end figures of the bare fiber: 0.21 dB/km plus 1.5 dB of connectors.
+FIBER_CIRCUITS = [
+    {"name": "Stockholm - Gothenburg, pair 1", "cid": "NF-FC-0001", "trunk": "bb1", "wdms": ("sto-wdm-02", "got-wdm-01"),
+     "description": "Line side of sto-wdm-02 and got-wdm-01: the first leg of Baltic Retail Group's protect path."},
+    {"name": "Stockholm - Oslo, pair 1", "cid": "NF-FC-0002", "trunk": "bb3", "wdms": ("sto-wdm-01", "osl-wdm-01"),
+     "description": "Line side of sto-wdm-01 and osl-wdm-01: carries Fjord Media Networks' wavelength service."},
+    {"name": "Gothenburg - Malmö, pair 1", "cid": "NF-FC-0003", "trunk": "bb4", "wdms": ("got-wdm-02", "mma-wdm-01"),
+     "description": "Line side of got-wdm-02 and mma-wdm-01: the second leg of the protect path, regenerated in Gothenburg."},
+    {"name": "Stockholm - Helsinki (NSN), pair 1", "cid": "NF-FC-0004", "trunk": "nsn", "wdms": ("sto-wdm-03", "hel-wdm-01"),
+     "description": "Line side of sto-wdm-03 and hel-wdm-01, over the NSN-DF-0001 trunk and both MeetMe rooms."},
+    {"name": "Stockholm - Helsinki (BFN), pair 1", "cid": "NF-FC-0005", "trunk": "bfn", "wdms": ("sto-wdm-04", "hel-wdm-02"),
+     "description": "Line side of sto-wdm-04 and hel-wdm-02, over the BFN-DF-0001 trunk and both MeetMe rooms."},
+]
+FIBER_CIRCUIT_WAVELENGTH_NM = 1550
+FIBER_CIRCUIT_LOSS_DB_PER_KM = 0.21
+FIBER_CIRCUIT_CONNECTOR_LOSS_DB = 1.5

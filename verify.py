@@ -195,6 +195,30 @@ def run(nb):
     check("long-haul and vendor trunks have 48-fiber FMS records",
           all(fc.fiber_cable_type.strand_count == 48 for fc in nb.plugins.fms.fiber_cables.all()))
 
+    print("== Fiber strands and circuits ==")
+    badly_landed = []
+    for s in nb.plugins.fms.fiber_strands.filter(limit=0):
+        want = f"Port {(s.position + 1) // 2}"
+        a, b = s.front_port_a, s.front_port_b
+        if not (a and b and a.name == b.name == want and a.device.id != b.device.id):
+            badly_landed.append(f"{s.fiber_cable}/{s.name}")
+    check("every strand is landed on its pair's panel port at both ends (strands 2n-1, 2n -> Port n)",
+          not badly_landed, str(badly_landed[:5]))
+    fcs = {fc.cid: fc for fc in nb.plugins.fms.fiber_circuits.all()}
+    check("one FMS fiber circuit per trunk pair in use", set(fcs) == {c["cid"] for c in T.FIBER_CIRCUITS}, str(sorted(fcs)))
+    for plan in T.FIBER_CIRCUITS:
+        fc = fcs.get(plan["cid"])
+        paths = list(nb.plugins.fms.fiber_circuit_paths.filter(circuit_id=fc.id)) if fc else []
+        (o_dev, o_port), (d_dev, d_port) = (O.LINE_PATCH[w] for w in plan["wdms"])
+        want_ends = (o_dev, f"Port {o_port}", d_dev, f"Port {d_port}")
+        def port(pk):                                # the FMS serializer returns plain ids for these
+            fp = nb.dcim.front_ports.get(pk)
+            return fp.device.name, fp.name
+        got = {port(p.origin) + port(p.destination) for p in paths if p.destination}
+        check(f"{plan['cid']}: 2 strands, both paths complete {want_ends[0]}:{want_ends[1]} -> {want_ends[2]}:{want_ends[3]}",
+              bool(fc) and fc.strand_count == 2 and len(paths) == 2 and all(p.is_complete for p in paths)
+              and got == {want_ends}, f"{got}")
+
     print("== Physical paths, traced by NetBox ==")
 
     def trace_end(device, ifname):
