@@ -66,6 +66,7 @@ def long_haul(nb, cabler):
         for tube in T.FMS_BUFFER_TUBES:
             nb.plugins.fms.buffer_tube_templates.create(fiber_cable_type=cable_type.id, **tube)
 
+    tenants = {t["code"]: nb.tenancy.tenants.get(slug=t["slug"]) for t in TENANTS}
     print("== Long-haul cables, fiber plant and routes ==")
     for key, a, b, note, fms_note in T.LONG_HAUL:
         route = T.ROUTES[key]
@@ -75,9 +76,12 @@ def long_haul(nb, cabler):
         cable = cabler.connect(("rearport",) + a, ("rearport",) + b, note=note,
                                tenant="nordfiber-ab" if own else None, km=km)
 
-        if not nb.plugins.fms.fiber_cables.get(cable_id=cable.id):
-            fc = nb.plugins.fms.fiber_cables.create(cable=cable.id, fiber_cable_type=cable_type.id, notes=fms_note)
-            report("fiber cable", fc, "created", cable.label)
+        detail = T.FIBER_DETAILS[key]
+        installer = tenants.get(detail["installer"]) if detail["installer"] else None
+        fc, st = ensure(nb.plugins.fms.fiber_cables, {"cable_id": cable.id}, cable=cable.id, fiber_cable_type=cable_type.id,
+                        notes=fms_note, serial_number=detail["serial_number"], install_date=detail["install_date"],
+                        installed_by=installer.id if installer else None, start_mark=0, end_mark=round(km * 1000))
+        report("fiber cable", fc, st, cable.label)
 
         label = f"{cable.label}-route"
         names = " -> ".join(n for n, _, _ in route)

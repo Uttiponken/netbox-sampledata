@@ -6,7 +6,7 @@ how it is named and cabled. This describes the build produced by
 
 ## TL;DR
 
-- **5 sites, 16 racks, 69 devices, 131 cables, 6 circuits.** Three
+- **5 sites, 18 racks, 85 devices, 142 cables, 6 circuits.** Three
   datacenters Nordfiber owns — **Stockholm** (HQ), **Gothenburg**,
   **Helsinki** — and two points of presence, **Malmö** and **Oslo** (the
   cross-border one).
@@ -14,11 +14,14 @@ how it is named and cabled. This describes the build produced by
   the same rack, cross-connected); PoPs have a single pair with the slots
   for the second one kept free. Every site otherwise has the same
   equipment in the same rack slots.
-- **Stockholm is the physical hub.** Three fiber pairs radiate from it to
-  Gothenburg, Malmö and Oslo (the Oslo pair is leased glass, managed as
+- **Stockholm is the physical hub.** Three 24-pair fiber trunks radiate from it to
+  Gothenburg, Malmö and Oslo (the Oslo trunk is leased glass, managed as
   Nordfiber's own cable); Gothenburg–Malmö has a fourth. Helsinki is
-  reached over two independent leased pairs from two vendors on
+  reached over two independent leased 24-pair trunks from two vendors on
   geographically disjoint routes.
+- **Every panel-to-panel connection is a 24-pair trunk**: one cable (48 fibers)
+  between two patch panels, each with 24 duplex LC ports on the front and one
+  rear port "Trunk" with 24 positions. There is one panel per trunk.
 - **Everything between sites is dark fiber**; DWDM (SmartOptics
   DCP-M40-PAM4-ER muxponders, 40 channels each) lights the wavelengths that
   need bandwidth.
@@ -44,6 +47,7 @@ One scheme everywhere (it lives in `naming.py`):
 | Nordfiber device | `<site>-<role>-<NN>` | `sto-rtr-01`, `hel-oob-01`, `got-wdm-02` |
 | Tenant device | `<tenant>-<site>-<role>-<NN>` | `polaris-sto-sw-01` |
 | MeetMe panel | `<site>-mmr-<party>-01` | `got-mmr-vastkust-01` |
+| Telecom-room trunk panel | `<site>-patch-<to>-01`, `<to>` = `mmr` or the site the trunk goes to | `sto-patch-mmr-01`, `sto-patch-got-01` |
 | Cable | `<site>-cbl-NNNNN` inside a site, `bb-cbl-NNNNN` between sites | `got-cbl-00011`, `bb-cbl-00005` |
 | Serial | `<MFR>-<SITE>-<nnnn>` | `JNP-STO-0001` |
 | Asset tag (Nordfiber's own) | `NF-<SITE>-<nnnnn>` | `NF-STO-00003` |
@@ -52,10 +56,10 @@ One scheme everywhere (it lives in `naming.py`):
 
 | Site | Kind | Building / MeetMe room | Racks |
 |---|---|---|---|
-| Stockholm DC | Datacenter (HQ) | Nordfiber's own, including the MeetMe room | `STO-TR-01` core, `STO-MM-01` MeetMe, `STO-CH-01` Polaris colo |
+| Stockholm DC | Datacenter (HQ) | Nordfiber's own, including the MeetMe room | `STO-TR-01` core, `STO-MM-01` MeetMe, `STO-CH-01` Polaris colo, `STO-CH-02` Baltic Retail colo |
 | Gothenburg DC | Datacenter | MeetMe room is space in a building run by Skagerrak Interconnect AB | `GOT-TR-01` core, `GOT-MM-01` MeetMe, `GOT-CH-01` Polaris, `GOT-CH-02` Västhamnen, `GOT-CH-03/04` empty growth racks, `GOT-IDF-01` floor 3 closet |
 | Helsinki DC | Datacenter (smaller) | Nordfiber's own, including the MeetMe room | `HEL-TR-01`, `HEL-MM-01` |
-| Malmö PoP | PoP | MeetMe room run by Öresund Exchange AB | `MMA-TR-01`, `MMA-MM-01` |
+| Malmö PoP | PoP | MeetMe room run by Öresund Exchange AB | `MMA-TR-01`, `MMA-MM-01`, `MMA-CH-01` Baltic Retail colo |
 | Oslo PoP | PoP | MeetMe room run by Skagerrak Interconnect AB | `OSL-TR-01`, `OSL-MM-01` |
 
 **Uniform slots** (NetBox position 42 is the top; 2U gaps between kinds of
@@ -63,27 +67,28 @@ equipment leave room to grow):
 
 | Rack kind | Top to bottom |
 |---|---|
-| Core rack (`-TR-01`) | U42 fiber patch panel · U39 OOB switch · U36/35 router 01/02 · U34/33 switch 01/02 · U30 and down WDM terminals · U24 DCP-2 shelf (fixed, so it lines up everywhere) |
+| Core rack (`-TR-01`) | U42–38 trunk patch panels, by destination (U42 MeetMe room, U41 Stockholm, U40 Gothenburg, U39 Malmö, U38 Oslo; the site's own slot stays free) · U35 OOB switch · U32/31 router 01/02 · U30/29 switch 01/02 · U26 and down WDM terminals · U20 DCP-2 shelf (fixed, so it lines up everywhere) |
 | Colo customer rack | U42 top-of-rack fiber panel · U39 tenant switch · U36 and down servers |
 | MeetMe rack | U42 Nordfiber's panel · U41 the facility owner's own panel (where it isn't Nordfiber) · U38 and down external parties |
 | IDF rack | U42 floor switch |
 
-PoPs keep U35/U33 free: the same racks, with the second pair not yet
+PoPs keep U31/U29 free: the same racks, with the second pair not yet
 installed.
 
 ## 3. Long-haul fiber
 
-Six cables, `bb-cbl-00001` to `-00006`. Each has an FMS fiber-cable record
-(Corning ALTOS loose tube, 24 fibers, DIN/IEC colours) and a PostGIS route
+Six 24-pair trunks, `bb-cbl-00001` to `-00006`, each ONE cable between two trunk panels. Each has an FMS fiber-cable record
+(Corning ALTOS loose tube, 48 fibers = 24 pairs, DIN/IEC colours, with serial number, install date, installer and
+route marks from 0 to the route length in metres) and a PostGIS route
 (`DirectBuried` pathway + `CableSegment`). The cable's length is the route
 length.
 
 | Cable | Between | Route | Length |
 |---|---|---|---|
-| `bb-cbl-00001` | Stockholm – Gothenburg patch panels | Västerås, Örebro, Karlstad, Trollhättan | 480 km |
-| `bb-cbl-00002` | Stockholm – Malmö | the E4: Linköping, Jönköping, Markaryd, Hässleholm, Lund | 553 km |
-| `bb-cbl-00003` | Stockholm – Oslo (**leased** from Polarlink Transit, `PLT-100234`) | Västerås, Örebro, Karlstad, Charlottenberg | 448 km |
-| `bb-cbl-00004` | Gothenburg – Malmö | the west coast: Varberg, Halmstad, Helsingborg, Landskrona | 259 km |
+| `bb-cbl-00001` | `sto-patch-got-01` – `got-patch-sto-01` | Västerås, Örebro, Karlstad, Trollhättan | 480 km |
+| `bb-cbl-00002` | `sto-patch-mma-01` – `mma-patch-sto-01` | the E4: Linköping, Jönköping, Markaryd, Hässleholm, Lund | 553 km |
+| `bb-cbl-00003` | `sto-patch-osl-01` – `osl-patch-sto-01` (**leased** from Polarlink Transit, `PLT-100234`) | Västerås, Örebro, Karlstad, Charlottenberg | 448 km |
+| `bb-cbl-00004` | `got-patch-mma-01` – `mma-patch-got-01` | the west coast: Varberg, Halmstad, Helsingborg, Landskrona | 259 km |
 | `bb-cbl-00005` | Stockholm – Helsinki, **NSN-DF-0001** (Nordic Subsea Networks), between the vendor's two MeetMe panels | Mariehamn (Åland), Vaasa | 850 km |
 | `bb-cbl-00006` | Stockholm – Helsinki, **BFN-DF-0001** (Baltic Fibre Networks), between the vendor's two MeetMe panels | Visby (Gotland), Riga, Tallinn | 907 km |
 
@@ -98,7 +103,8 @@ through Gotland and the Baltics.
 ## 4. DWDM transport
 
 Ten muxponders, all SmartOptics DCP-M40-PAM4-ER (a terminal mux, not a
-ROADM), each with all 40 channels provisioned; only the listed ones are lit.
+ROADM), each with all 40 channels provisioned; only the listed ones are lit, and those are
+marked Active (the rest stay Available).
 
 | Node | Carries |
 |---|---|
@@ -143,18 +149,19 @@ rack) where each external party has its own demarc panel.
 
 | Site | Panels |
 |---|---|
-| Stockholm | Nordfiber, Polaris (colo), Nordic Subsea Networks, Baltic Fibre Networks |
+| Stockholm | Nordfiber, Polaris (colo), Nordic Subsea Networks, Baltic Fibre Networks, Baltic Retail (colo) |
 | Gothenburg | Nordfiber, Skagerrak (owner), Polaris (colo), Västhamnen (colo), Västkust Bredband (Internet) |
 | Helsinki | Nordfiber, Nordic Subsea Networks, Baltic Fibre Networks |
-| Malmö | Nordfiber, Öresund (owner) |
+| Malmö | Nordfiber, Öresund (owner), Baltic Retail (colo) |
 | Oslo | Nordfiber, Skagerrak (owner) |
 
-Convention everywhere: **REAR ports are trunks, FRONT ports are jumpers.**
-A colo tenant's path is
+Convention everywhere: **the REAR port "Trunk" is a 24-pair trunk, FRONT ports are jumpers.** A
+trunk keeps the pair number: front port N at one end is front port N at the other (position N of the trunk), so
+the MeetMe port of a party is also its port on `<site>-patch-mmr-01`. A colo tenant's path is
 
 ```
 server -> tenant switch -> tenant ToR panel --[trunk]--> tenant's MeetMe panel
-  --[jumper]--> Nordfiber's MeetMe panel --[trunk]--> Nordfiber patch panel (telecom room)
+  --[jumper]--> Nordfiber's MeetMe panel --[trunk]--> <site>-patch-mmr-01 (telecom room)
   --[jumper]--> Nordfiber switch (sto-sw-01 / got-sw-01)
 ```
 
@@ -199,7 +206,7 @@ Decided in one place (`cabling.py`) so every cable gets them at creation:
 
 | Circuit | Purpose | Physical path | Rate |
 |---|---|---|---|
-| `NF-BRG-0001` | Baltic Retail, primary EPL | direct, `bb-cbl-00002` | 10 Gbps |
+| `NF-BRG-0001` | Baltic Retail, primary EPL; Baltic Retail has a server and switch in colo at each end (`baltic-retail-sto-srv-01`, `baltic-retail-mma-srv-01`) | direct, `bb-cbl-00002` | 10 Gbps |
 | `NF-BRG-0002` | Baltic Retail, protect | DWDM via Gothenburg, regenerated | 10 Gbps |
 | `PLT-100234` | Nordfiber's leased Stockholm–Oslo dark fiber (Polarlink) | `bb-cbl-00003`, lit as Fjord's service | — |
 | `VKB-INET-0001` | Nordfiber's upstream Internet (Västkust Bredband), A side only | via Gothenburg's MeetMe room | 10 Gbps |

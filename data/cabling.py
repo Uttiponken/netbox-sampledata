@@ -4,9 +4,9 @@ Layer 3 data: the cabling inside each building, as plain lists of
 
 Port conventions (identical at every site, which is the point):
 
-  patch panel (Telecom Room)   port 1..n, each port = one fiber pair; the REAR goes
-                               out of the room (backbone / MeetMe trunk), the FRONT
-                               goes to the equipment that uses it
+  trunk patch panel            24 duplex LC ports on the front, ONE rear port "Trunk" with 24 positions: the
+  (Telecom Room)               rear is a 24-pair trunk (one cable, 48 fibers) to the panel at the other end,
+                               the FRONT goes to the equipment that uses the pair
   Nordfiber MeetMe panel       one port per external party; REAR = trunk to the
                                patch panel, FRONT = jumper to the party's own panel
   core rack                    rtr-01 xe-0/1/0 -> sw-01 Ethernet1 (+ the DC redundancy mesh)
@@ -20,18 +20,20 @@ from data import hardware as H
 from layout import colo_racks, core_names
 
 # ---------------------------------------------------------------------------
-# MeetMe room: which party lands on which Nordfiber MeetMe port, which
-# Telecom-Room patch panel port that trunk continues to, and where the
-# patch panel's front port finally goes.
-#   party -> (MeetMe port, patch panel port, handoff)
+# MeetMe room: which party lands on which Nordfiber MeetMe port, and where the
+# trunk's front port at the telecom-room panel finally goes. The trunk keeps the
+# pair number, so MeetMe port N is port N on `<site>-patch-mmr-01` too.
+#   party -> (MeetMe port, handoff)
 # handoff: (device suffix, interface) on the local core, or None when the
 # port is lit by a WDM node (layer 5) instead.
 # ---------------------------------------------------------------------------
 PARTY_LINKS = {
-    "sto": {"polaris": (1, 4, ("sw-01", "Ethernet2")), "nsn": (2, 5, None), "bfn": (3, 6, None)},
-    "got": {"polaris": (1, 4, ("sw-01", "Ethernet2")), "vasthamnen": (2, 5, ("sw-01", "Ethernet3")),
-            "vastkust": (3, 3, ("rtr-01", "xe-0/1/1"))},
-    "hel": {"nsn": (1, 1, None), "bfn": (2, 2, None)},
+    "sto": {"polaris": (1, ("sw-01", "Ethernet2")), "nsn": (2, None), "bfn": (3, None),
+            "baltic-retail": (4, ("sw-01", "Ethernet3"))},
+    "got": {"polaris": (1, ("sw-01", "Ethernet2")), "vasthamnen": (2, ("sw-01", "Ethernet3")),
+            "vastkust": (3, ("rtr-01", "xe-0/1/1"))},
+    "mma": {"baltic-retail": (1, ("sw-01", "Ethernet2"))},
+    "hel": {"nsn": (1, None), "bfn": (2, None)},
 }
 
 # The party's own panel always uses its port 1.
@@ -96,19 +98,17 @@ def oob(site):
 
 
 def meetme(site):
-    """MeetMe room legs that belong to this building: jumpers, trunks and the patch-panel handoff."""
+    """MeetMe room legs that belong to this building: the trunk, jumpers and the patch-panel handoff."""
     c = site["code"]
     names = core_names(site)
     nf = f"{c}-mmr-nordfiber-01"
-    plan = []
-    for party, (mm_port, patch_port, handoff) in PARTY_LINKS.get(c, {}).items():
+    plan = [(R(nf, "Trunk"), R(names["patch"]["mmr"], "Trunk"), "24-pair trunk, MeetMe room to telecom room")]
+    for party, (mm_port, handoff) in PARTY_LINKS.get(c, {}).items():
         panel = f"{c}-mmr-{party}-01"
         plan.append((F(nf, f"Port {mm_port}"), F(panel, f"Port {PARTY_PORT}"), f"cross-connect jumper to {party}"))
-        plan.append((R(nf, f"Port {mm_port}"), R(names["patch"], f"Port {patch_port}"),
-                     "trunk, MeetMe room to telecom room"))
         if handoff:
             suffix, iface = handoff
-            plan.append((F(names["patch"], f"Port {patch_port}"), I(f"{c}-{suffix}", iface), f"{party} handoff"))
+            plan.append((F(names["patch"]["mmr"], f"Port {mm_port}"), I(f"{c}-{suffix}", iface), f"{party} handoff"))
     return plan
 
 
@@ -123,8 +123,7 @@ def colo(site):
         for n in range(1, H.COLO_SERVERS.get((c, tenant), 0) + 1):
             plan.append((I(f"{tenant}-{c}-srv-{n:02d}", "Gig-E 1"), I(sw, f"Ethernet{n}"), "server uplink"))
         plan.append((F(tor, f"Port {PARTY_PORT}"), I(sw, "Ethernet49"), "switch uplink to ToR panel"))
-        plan.append((R(f"{c}-mmr-{tenant}-01", f"Port {PARTY_PORT}"), R(tor, f"Port {PARTY_PORT}"),
-                     "trunk, MeetMe room to colo hall"))
+        plan.append((R(f"{c}-mmr-{tenant}-01", "Trunk"), R(tor, "Trunk"), "24-pair trunk, MeetMe room to colo hall"))
     return plan
 
 

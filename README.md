@@ -119,7 +119,7 @@ what is left. The remaining differences are all deliberate (see
 
 - **Nordfiber AB** (Internal) — owns the sites and core infrastructure.
 - **Baltic Retail Group** (Customers) — an EPL Stockholm–Malmö with a
-  protect path via Gothenburg.
+  protect path via Gothenburg, and a colocated server and switch at each end.
 - **Polaris Cloud Services** (Customers) — colo at Stockholm and Gothenburg.
 - **Västhamnen Logistics** (Customers) — colo at Gothenburg.
 - **Fjord Media Networks** (Customers) — a wavelength service Stockholm–Oslo.

@@ -59,7 +59,7 @@ CIRCUITS = [
 CABLED_TERMINATIONS = [
     ("NF-BRG-0001", "A", ("interface", "sto-rtr-01", "et-0/0/0"), "primary demarc"),
     ("NF-BRG-0001", "Z", ("interface", "mma-rtr-01", "et-0/0/0"), "primary demarc"),
-    ("VKB-INET-0001", "A", ("rearport", "got-mmr-vastkust-01", "Port 1"), "Internet handoff at the provider's MeetMe panel"),
+    ("VKB-INET-0001", "A", ("rearport", "got-mmr-vastkust-01", "Trunk"), "Internet handoff at the provider's MeetMe panel"),
 ]
 
 ROUTES = {
@@ -84,32 +84,41 @@ ROUTES = {
 # End = (device, rear port). Cable tenant: Nordfiber for its own and the leased
 # Polarlink fiber, the vendor for a vendor span (the cabler infers it from the panels).
 LONG_HAUL = [
-    ("bb1", ("sto-patch-01", "Port 1"), ("got-patch-01", "Port 1"),
-     "Nordfiber-owned backbone, Stockholm - Gothenburg via Västerås, Örebro, Karlstad, Trollhättan",
-     "Owned by Nordfiber AB. In-country backbone."),
-    ("bb2", ("sto-patch-01", "Port 2"), ("mma-patch-01", "Port 1"),
-     "Nordfiber-owned backbone, Stockholm - Malmö via the E4",
-     "Owned by Nordfiber AB. Physical path of Baltic Retail Group's NF-BRG-0001."),
-    ("bb3", ("sto-patch-01", "Port 3"), ("osl-patch-01", "Port 1"),
-     "Leased dark fiber (Polarlink Transit, PLT-100234), Stockholm - Oslo via Västerås, Örebro, Karlstad, Charlottenberg",
-     "Leased from Polarlink Transit under PLT-100234. Lit with Nordfiber's own WDM equipment."),
-    ("bb4", ("got-patch-01", "Port 2"), ("mma-patch-01", "Port 2"),
-     "Nordfiber-owned backbone, Gothenburg - Malmö along the west coast via Varberg, Halmstad, Helsingborg",
-     "Owned by Nordfiber AB. Second leg of the NF-BRG-0002 protect path, regenerated in Gothenburg."),
-    ("nsn", ("sto-mmr-nsn-01", "Port 1"), ("hel-mmr-nsn-01", "Port 1"),
-     "NSN-DF-0001: leased fiber span between the vendor's MeetMe panels, Stockholm - Helsinki via Mariehamn and Vaasa",
-     "Leased from Nordic Subsea Networks AB under NSN-DF-0001."),
-    ("bfn", ("sto-mmr-bfn-01", "Port 1"), ("hel-mmr-bfn-01", "Port 1"),
-     "BFN-DF-0001: leased fiber span between the vendor's MeetMe panels, Stockholm - Helsinki via Gotland, Riga and Tallinn",
-     "Leased from Baltic Fibre Networks OÜ under BFN-DF-0001."),
+    ("bb1", ("sto-patch-got-01", "Trunk"), ("got-patch-sto-01", "Trunk"),
+     "Nordfiber-owned 24-pair trunk, Stockholm - Gothenburg via Västerås, Örebro, Karlstad, Trollhättan",
+     "Owned by Nordfiber AB. In-country backbone, 24 pairs (48 fibers)."),
+    ("bb2", ("sto-patch-mma-01", "Trunk"), ("mma-patch-sto-01", "Trunk"),
+     "Nordfiber-owned 24-pair trunk, Stockholm - Malmö via the E4",
+     "Owned by Nordfiber AB. Physical path of Baltic Retail Group's NF-BRG-0001. 24 pairs (48 fibers)."),
+    ("bb3", ("sto-patch-osl-01", "Trunk"), ("osl-patch-sto-01", "Trunk"),
+     "Leased 24-pair trunk (Polarlink Transit, PLT-100234), Stockholm - Oslo via Västerås, Örebro, Karlstad, Charlottenberg",
+     "Leased from Polarlink Transit under PLT-100234. 24 pairs (48 fibers). Lit with Nordfiber's own WDM equipment."),
+    ("bb4", ("got-patch-mma-01", "Trunk"), ("mma-patch-got-01", "Trunk"),
+     "Nordfiber-owned 24-pair trunk, Gothenburg - Malmö along the west coast via Varberg, Halmstad, Helsingborg",
+     "Owned by Nordfiber AB. 24 pairs (48 fibers). Second leg of the NF-BRG-0002 protect path, regenerated in Gothenburg."),
+    ("nsn", ("sto-mmr-nsn-01", "Trunk"), ("hel-mmr-nsn-01", "Trunk"),
+     "NSN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm - Helsinki via Mariehamn and Vaasa",
+     "Leased from Nordic Subsea Networks AB under NSN-DF-0001. 24 pairs (48 fibers)."),
+    ("bfn", ("sto-mmr-bfn-01", "Trunk"), ("hel-mmr-bfn-01", "Trunk"),
+     "BFN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm - Helsinki via Gotland, Riga and Tallinn",
+     "Leased from Baltic Fibre Networks OÜ under BFN-DF-0001. 24 pairs (48 fibers)."),
 ]
 
 FMS_CABLE_TYPE = {
-    "manufacturer": "corning", "model": "ALTOS Loose Tube 24F SM", "construction": "loose_tube", "strand_count": 24,
+    "manufacturer": "corning", "model": "ALTOS Loose Tube 48F SM", "construction": "loose_tube", "strand_count": 48,
     "color_scheme": "din_iec_60304", "sheath_material": "hdpe", "deployment": "duct", "is_armored": True,
-    "armor_type": "steel_tape",
+    "armor_type": "steel_tape", "mark_unit": "m",
 }
-FMS_BUFFER_TUBES = [
-    {"name": "Tube 1", "position": 1, "fiber_count": 12},
-    {"name": "Tube 2", "position": 2, "fiber_count": 12},
-]
+
+# What the fiber-plant record of each long-haul cable says about its manufacture and installation. Route marks
+# run from 0 to the route length in metres. The Polarlink pair has no installer here: Polarlink is a provider,
+# not a tenant.
+FIBER_DETAILS = {
+    "bb1": {"serial_number": "CNG-ALTOS24-0001", "install_date": "2022-05-16", "installer": "nordfiber"},
+    "bb2": {"serial_number": "CNG-ALTOS24-0002", "install_date": "2022-06-20", "installer": "nordfiber"},
+    "bb3": {"serial_number": "CNG-ALTOS24-0003", "install_date": "2021-09-01", "installer": None},
+    "bb4": {"serial_number": "CNG-ALTOS24-0004", "install_date": "2024-04-08", "installer": "nordfiber"},
+    "nsn": {"serial_number": "CNG-ALTOS24-0005", "install_date": "2023-11-27", "installer": "nsn"},
+    "bfn": {"serial_number": "CNG-ALTOS24-0006", "install_date": "2024-02-14", "installer": "bfn"},
+}
+FMS_BUFFER_TUBES = [{"name": f"Tube {n}", "position": n, "fiber_count": 12} for n in range(1, 5)]   # 4 x 12 = 48

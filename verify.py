@@ -17,7 +17,7 @@ import re
 import sys
 
 import layout
-from common import connect
+from common import api, connect
 from data import cabling as C
 from data import hardware as H
 from data import optical as O
@@ -77,7 +77,7 @@ def run(nb):
                  (devices[d["name"]].rack.name if devices[d["name"]].rack else None) != d["rack"]
                  or (d["position"] is not None and d["name"] in devices and devices[d["name"]].position != d["position"])]
     check("every device in its planned rack and U", not misplaced, str(misplaced))
-    core = ("patch-01", "oob-01", "rtr-01", "rtr-02", "sw-01", "sw-02", "dcp2-01")
+    core = ("patch-mmr-01", "oob-01", "rtr-01", "rtr-02", "sw-01", "sw-02", "dcp2-01")
     for kind in ("dc", "pop"):
         shapes = {tuple(sorted(n.split("-", 1)[1] for n in devices if n.startswith(s["code"] + "-")
                                and n.split("-", 1)[1] in core))
@@ -148,8 +148,8 @@ def run(nb):
     for s in SITES:
         for plan in (C.core_pair(s), C.meetme(s), C.colo(s), C.office(s), C.oob(s)):
             missing += [f"{a[1]}:{a[2]}<>{b[1]}:{b[2]}" for a, b, _ in plan if not cabled(a, b)]
-    for wdm, port in O.LINE_PATCH_PORT.items():
-        if not cabled(("frontport", f"{wdm.split('-')[0]}-patch-01", f"Port {port}"), ("rearport", wdm, "Line")):
+    for wdm, (patch, port) in O.LINE_PATCH.items():
+        if not cabled(("frontport", patch, f"Port {port}"), ("rearport", wdm, "Line")):
             missing.append(f"{wdm} line")
     for wdm, ch, shelf, line in O.SHELF_LINE:
         if not cabled(("frontport", wdm, ch), ("interface", shelf, line)):
@@ -168,44 +168,58 @@ def run(nb):
             missing.append(f"{a[0]} <> {b[0]}")
     check("all planned cables present", not missing, str(missing))
 
-    print("== Physical paths, walked cable by cable ==")
+    print("== Trunks ==")
+    panels = [d for d in devices.values() if d.role.slug == "patch-panel"]
+    check("every patch panel is a 24-port panel with one 24-position trunk",
+          all(d.device_type.slug == "generic-lc-24-trunk-patch-panel" for d in panels))
+    trunk_ends, discrete = {}, []
+    for c in cables:
+        ends = list(c.a_terminations) + list(c.b_terminations)
+        rear = [t.object for t in ends if t.object_type == "dcim.rearport"]
+        if any(r.name == "Trunk" for r in rear):
+            trunk_ends[c.label] = ([r.device.name for r in rear if r.name == "Trunk"],
+                                   any(t.object_type == "circuits.circuittermination" for t in ends))
+        discrete += [c.label for r in rear if r.name != "Trunk" and r.device.role.slug == "patch-panel"]
+    check("every trunk is ONE cable between two panels (or a panel and a circuit demarc)",
+          all(len(panels_) == 2 or (len(panels_) == 1 and circuit) for panels_, circuit in trunk_ends.values()), str(trunk_ends))
+    # the facility owner's own panel in a MeetMe room is a placeholder: it carries nothing
+    owner_panels = {f"{x['code']}-mmr-{x['mm_owner']}-01" for x in SITES if x["mm_owner"] != "nordfiber"}
+    lone = [d.name for d in panels if d.name not in owner_panels
+            and not any(d.name in panels_ for panels_, _c in trunk_ends.values())]
+    check("no panel is left without its trunk (the facility owners' placeholders excepted)", not lone, str(lone))
+    check("no panel has discrete one-pair rear cables any more", not discrete, str(discrete))
+    check("long-haul and vendor trunks have 48-fiber FMS records",
+          all(fc.fiber_cable_type.strand_count == 48 for fc in nb.plugins.fms.fiber_cables.all()))
 
-    def walk(device, kind, name):
-        """Follow cables through passive panels (front N <-> rear N) to the first non-panel end."""
-        ep = {"interface": nb.dcim.interfaces, "frontport": nb.dcim.front_ports, "rearport": nb.dcim.rear_ports}
-        cur = ep[kind].get(device_id=devices[device].id, name=name)
-        for _ in range(40):
-            if not cur.cable:
-                return None
-            cable = nb.dcim.cables.get(id=cur.cable.id)
-            here = {(t.object_type, t.object.id) for t in (list(cable.a_terminations) + list(cable.b_terminations))
-                    if t.object.id == cur.id and t.object_type == f"dcim.{kind}"}
-            far = next(t for t in list(cable.a_terminations) + list(cable.b_terminations)
-                       if not (t.object.id == cur.id and t.object_type == f"dcim.{kind}"))
-            if far.object_type == "circuits.circuittermination":
-                return f"circuit:{far.object.circuit.cid}:{far.object.term_side}"
-            fdev = devices[far.object.device.name]
-            fkind = far.object_type.split(".")[1]
-            if fdev.role.slug != "patch-panel":
-                return f"{fdev.name}:{far.object.name}"
-            other = {"frontport": ("rearport", nb.dcim.rear_ports), "rearport": ("frontport", nb.dcim.front_ports)}[fkind]
-            cur = other[1].get(device_id=fdev.id, name=far.object.name)
-            kind = other[0]
-        return "loop"
+    print("== Physical paths, traced by NetBox ==")
+
+    def trace_end(device, ifname):
+        """Where NetBox's own trace from an interface ends: 'device:port' or 'circuit:CID:side'."""
+        iface = nb.dcim.interfaces.get(device_id=devices[device].id, name=ifname)
+        legs = api(f"/api/dcim/interfaces/{iface.id}/trace/")
+        far = legs[-1][2] if legs else []
+        if not far:
+            return None
+        end_ = far[0]
+        if "circuit" in end_:
+            return f"circuit:{end_['circuit']['cid']}:{end_['term_side']}"
+        return f"{end_['device']['name']}:{end_['name']}"
 
     expected = [
-        ("sto-wdm-01", "rearport", "Line", "osl-wdm-01:Line"),
-        ("sto-wdm-02", "rearport", "Line", "got-wdm-01:Line"),
-        ("got-wdm-02", "rearport", "Line", "mma-wdm-01:Line"),
-        ("sto-wdm-03", "rearport", "Line", "hel-wdm-01:Line"),
-        ("sto-wdm-04", "rearport", "Line", "hel-wdm-02:Line"),
-        ("polaris-sto-sw-01", "interface", "Ethernet49", "sto-sw-01:Ethernet2"),
-        ("polaris-got-sw-01", "interface", "Ethernet49", "got-sw-01:Ethernet2"),
-        ("vasthamnen-got-sw-01", "interface", "Ethernet49", "got-sw-01:Ethernet3"),
-        ("got-rtr-01", "interface", "xe-0/1/1", "circuit:VKB-INET-0001:A"),
+        ("sto-dcp2-01", "Line/1/1", "osl-dcp2-01:Line/1/1"),                 # Fjord, through two trunks and two muxponders
+        ("sto-dcp2-01", "Line/2/1", "mma-dcp2-01:Line/1/1"),                 # Baltic Retail protect, regenerated in Gothenburg
+        ("sto-rtr-01", "et-0/0/2", "hel-rtr-01:et-0/0/2"),                   # Helsinki over NSN
+        ("sto-rtr-02", "et-0/0/3", "hel-rtr-02:et-0/0/3"),                   # Helsinki over BFN
+        ("polaris-sto-sw-01", "Ethernet49", "sto-sw-01:Ethernet2"),
+        ("baltic-retail-sto-sw-01", "Ethernet49", "sto-sw-01:Ethernet3"),
+        ("polaris-got-sw-01", "Ethernet49", "got-sw-01:Ethernet2"),
+        ("vasthamnen-got-sw-01", "Ethernet49", "got-sw-01:Ethernet3"),
+        ("baltic-retail-mma-sw-01", "Ethernet49", "mma-sw-01:Ethernet2"),
+        ("got-rtr-01", "xe-0/1/1", "circuit:VKB-INET-0001:A"),
+        ("sto-rtr-01", "et-0/0/0", "mma-rtr-01:et-0/0/0"),                   # the Baltic Retail circuit
     ]
-    for dev, kind, port, want in expected:
-        got = walk(dev, kind, port)
+    for dev, port, want in expected:
+        got = trace_end(dev, port)
         check(f"{dev}:{port} -> {want}", got == want, f"got {got}")
 
     print("== Optical services ==")

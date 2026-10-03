@@ -18,13 +18,12 @@ Requires layers 1-4. Safe to re-run.
 from cabling import F, I, R, Cabler
 from common import api, connect, ensure, report
 from data import optical as O
-from data.cabling import PARTY_LINKS  # noqa: F401  (documentation: which patch ports carry what)
 from data.organization import TENANTS
 
 
 def line_ports(nb):
     print("== WDM line ports ==")
-    for name in O.LINE_PATCH_PORT:
+    for name in O.LINE_PATCH:
         dev = nb.dcim.devices.get(name=name)
         node = nb.plugins.wdm.wdm_nodes.get(device_id=dev.id)
         rear = nb.dcim.rear_ports.get(device_id=dev.id, name="Line")
@@ -38,9 +37,8 @@ def line_ports(nb):
 
 def cabling(nb, cabler):
     print("== Patch panel <-> Line ==")
-    for wdm, port in O.LINE_PATCH_PORT.items():
-        patch = f"{wdm.split('-')[0]}-patch-01"
-        cabler.connect(F(patch, f"Port {port}"), R(wdm, "Line"), note=f"{wdm} line to patch panel")
+    for wdm, (patch, port) in O.LINE_PATCH.items():
+        cabler.connect(F(patch, f"Port {port}"), R(wdm, "Line"), note=f"{wdm} line to {patch}")
     print("== Muxponder channel <-> DCP-2 line ==")
     for wdm, ch, shelf, line in O.SHELF_LINE:
         cabler.connect(F(wdm, ch), I(shelf, line), note=f"{wdm} channel {ch} to {shelf} DCP-110 line side")
@@ -84,12 +82,29 @@ def wdm_circuits(nb):
             raise SystemExit(f"{wc['name']} does not stitch complete")
 
 
+def activate_channels(nb):
+    """A channel whose client port is cabled (or jumpered) is in service: mark it Active, not Available."""
+    print("== Channel status ==")
+    used = {(w, int(ch) - 920) for w, ch, _s, _l in O.SHELF_LINE}
+    used |= {(w, int(ch) - 920) for w, ch, _r, _i in O.DIRECT_HANDOFF}
+    used |= {(O.REGEN_JUMPER[0], int(O.REGEN_JUMPER[1]) - 920), (O.REGEN_JUMPER[2], int(O.REGEN_JUMPER[3]) - 920)}
+    for name, position in sorted(used):
+        node = nb.plugins.wdm.wdm_nodes.get(device_id=nb.dcim.devices.get(name=name).id)
+        channel = nb.plugins.wdm.wdm_channels.get(wdm_node_id=node.id, grid_position=position)
+        if str(channel.status.value if hasattr(channel.status, "value") else channel.status) != "active":
+            channel.update({"status": "active"})
+            print(f"  [updated] {name} channel {position}: active")
+        else:
+            print(f"  [exists ] {name} channel {position}: active")
+
+
 def run(nb):
     line_ports(nb)
     cabler = Cabler(nb)
     cabling(nb, cabler)
     cabler.summary()
     wdm_circuits(nb)
+    activate_channels(nb)
 
 
 if __name__ == "__main__":

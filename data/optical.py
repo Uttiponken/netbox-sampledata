@@ -5,14 +5,15 @@ and the wavelength services that ride on them.
 Channel 1 of a muxponder is front port "921" (ITU C21), channel 2 is "922".
 """
 
-# WDM node -> patch panel port its Line side lands on (same port number as the
-# trunk that carries it: the panel passes front port N through to rear port N).
-LINE_PATCH_PORT = {
-    "sto-wdm-01": 3, "sto-wdm-02": 1, "sto-wdm-03": 5, "sto-wdm-04": 6,
-    "got-wdm-01": 1, "got-wdm-02": 2,
-    "mma-wdm-01": 2,
-    "osl-wdm-01": 1,
-    "hel-wdm-01": 1, "hel-wdm-02": 2,
+# WDM node -> (patch panel, front port) its Line side lands on. The pair number is the trunk position, so it is
+# also the port at the far end: both muxponders of a link sit on the same-numbered port of their panels.
+LINE_PATCH = {
+    "sto-wdm-01": ("sto-patch-osl-01", 1), "sto-wdm-02": ("sto-patch-got-01", 1),
+    "sto-wdm-03": ("sto-patch-mmr-01", 2), "sto-wdm-04": ("sto-patch-mmr-01", 3),    # NSN and BFN via the MeetMe trunk
+    "got-wdm-01": ("got-patch-sto-01", 1), "got-wdm-02": ("got-patch-mma-01", 1),
+    "mma-wdm-01": ("mma-patch-got-01", 1),
+    "osl-wdm-01": ("osl-patch-sto-01", 1),
+    "hel-wdm-01": ("hel-patch-mmr-01", 1), "hel-wdm-02": ("hel-patch-mmr-01", 2),
 }
 
 # Muxponder channel -> DCP-2 shelf line port (the DCP-110 turns the 100G DWDM

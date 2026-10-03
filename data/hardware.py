@@ -21,11 +21,23 @@ DEVICE_TYPE_SOURCES = [
     "Arista/DCS-7010T-48",
     "Dell/PowerEdge-R650",
     "Dell/OptiPlex-SFF-7050",
-    "Generic/LC-24-port-fiber-patch-panel",
     "Smartoptics/DCP-M40-PAM4-ER",
     "Smartoptics/DCP-2",
 ]
 MODULE_TYPE_SOURCES = ["Smartoptics/DCP-110"]
+
+# A fiber patch panel is always the end of a 24-pair trunk: 24 duplex LC ports on the front, all fed by ONE
+# rear port with 24 positions (position n carries front port n). A trunk is one cable between two such rear
+# ports, 24 pairs = 48 fibers. There is no such type in the community library, so it is defined here.
+TRUNK_PANEL = {
+    "manufacturer": "Generic", "model": "LC-24 trunk patch panel (24-pair)", "slug": "generic-lc-24-trunk-patch-panel",
+    "part_number": "", "u_height": 1, "is_full_depth": False,
+    "rear-ports": [{"name": "Trunk", "type": "splice", "positions": 24}],
+    "front-ports": [{"name": f"Port {n}", "type": "lc"} for n in range(1, 25)],
+    "port-mappings": [{"front_port": f"Port {n}", "front_port_position": 1, "rear_port": "Trunk",
+                       "rear_port_position": n} for n in range(1, 25)],
+}
+CUSTOM_DEVICE_TYPES = [TRUNK_PANEL]
 
 # Short names used in the layout/cabling data.
 T_ROUTER = "juniper-mx204"
@@ -33,7 +45,7 @@ T_AGG_SWITCH = "arista-dcs-7050sx3-48yc8-f"
 T_COPPER_SWITCH = "arista-dcs-7010t-48"   # 48x1G copper + 4x10G SFP+: OOB, IDF and tenant switches
 T_SERVER = "dell-poweredge-r650"
 T_WORKSTATION = "dell-optiplex-sff-7050"
-T_PANEL = "generic-lc-24-port-fiber-patch-panel"
+T_PANEL = "generic-lc-24-trunk-patch-panel"
 T_WDM = "smartoptics-dcp-m40-pam4-er"
 T_DCP2 = "smartoptics-dcp-2"
 
@@ -68,22 +80,36 @@ MGMT_IFACE = {
 
 # Rack slots (NetBox position 42 = top), identical at every site, with a 2U gap
 # between different kinds of equipment so more can be added later.
-#   core rack:   patch panel | gap | OOB switch | gap | routers, switches | gap | WDM nodes | gap | DCP-2
+#   core rack:   trunk patch panels | gap | OOB switch | gap | routers, switches | gap | WDM nodes | gap | DCP-2
+#                A panel per trunk: "mmr" is the trunk to the MeetMe room, the others are the backbone trunks
+#                to that site. A panel sits at the same height at every site; the slot of the site itself stays free.
 #   colo rack:   ToR panel | gap | tenant switch | gap | servers
 #   MeetMe rack: Nordfiber panel, facility owner's panel | gap | external parties
-CORE_SLOTS = {"patch": 42, "oob": 39, "rtr": (36, 35), "sw": (34, 33), "wdm_first": 30, "dcp2": 24}
+CORE_SLOTS = {"patch": {"mmr": 42, "sto": 41, "got": 40, "mma": 39, "osl": 38},
+              "oob": 35, "rtr": (32, 31), "sw": (30, 29), "wdm_first": 26, "dcp2": 20}
+
+# The backbone: one 24-pair trunk per pair of sites.
+BACKBONE_PAIRS = [("sto", "got"), ("sto", "mma"), ("sto", "osl"), ("got", "mma")]
+
+
+def backbone_peers(code):
+    """The sites a site has a backbone trunk to, in the fixed order sto, got, mma, osl."""
+    order = ["sto", "got", "mma", "osl"]
+    peers = {b if a == code else a for a, b in BACKBONE_PAIRS if code in (a, b)}
+    return [c for c in order if c in peers]
 COLO_SLOTS = {"tor": 42, "sw": 39, "srv_first": 36}
 MEETME_SLOTS = {"nordfiber": 42, "owner": 41, "party_first": 38}
 IDF_SLOTS = {"sw": 42}
 
 # Colo customers' servers per (site, customer).
-COLO_SERVERS = {("sto", "polaris"): 2, ("got", "polaris"): 1, ("got", "vasthamnen"): 1}
+COLO_SERVERS = {("sto", "polaris"): 2, ("sto", "baltic-retail"): 1, ("got", "polaris"): 1, ("got", "vasthamnen"): 1,
+                ("mma", "baltic-retail"): 1}
 
 # External parties with a demarc panel in each site's MeetMe room, in rack order.
 MEETME_PARTIES = {
-    "sto": ["polaris", "nsn", "bfn"],
+    "sto": ["polaris", "nsn", "bfn", "baltic-retail"],
     "got": ["polaris", "vasthamnen", "vastkust"],
-    "mma": [],
+    "mma": ["baltic-retail"],
     "osl": [],
     "hel": ["nsn", "bfn"],
 }

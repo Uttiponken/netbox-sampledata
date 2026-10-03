@@ -7,6 +7,7 @@ The naming convention, in one place, so it looks the same everywhere.
   Nordfiber kit <site>-<role>-<NN>                sto-rtr-01, got-wdm-02, hel-oob-01
   tenant kit    <tenant>-<site>-<role>-<NN>       polaris-sto-sw-01, vasthamnen-got-srv-01
   MeetMe panel  <site>-mmr-<party>-01             got-mmr-vastkust-01
+  trunk panel   <site>-patch-<to>-01              sto-patch-mmr-01, sto-patch-got-01 (one 24-pair trunk each)
   cable label   <site>-cbl-NNNNN (inside a site) / bb-cbl-NNNNN (between sites)
   serial        <MFR>-<SITE>-<nnnn>               every device
   asset tag     NF-<SITE>-<nnnnn>                 Nordfiber-owned devices only

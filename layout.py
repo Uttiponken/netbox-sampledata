@@ -19,7 +19,9 @@ def site_by_code(code):
 def core_names(site):
     """Names of the core-rack devices for a site (used by cabling too)."""
     c = site["code"]
-    n = {"patch": f"{c}-patch-01", "oob": f"{c}-oob-01", "rtr": [f"{c}-rtr-01"], "sw": [f"{c}-sw-01"],
+    patch = {"mmr": f"{c}-patch-mmr-01"}
+    patch.update({peer: f"{c}-patch-{peer}-01" for peer in H.backbone_peers(c)})
+    n = {"patch": patch, "oob": f"{c}-oob-01", "rtr": [f"{c}-rtr-01"], "sw": [f"{c}-sw-01"],
          "wdm": [f"{c}-wdm-{i:02d}" for i in range(1, site["wdm_nodes"] + 1)], "dcp2": f"{c}-dcp2-01"}
     if site["kind"] == "dc":
         n["rtr"].append(f"{c}-rtr-02")
@@ -54,7 +56,8 @@ def inventory():
         # ---- core rack (Telecom Room)
         tr = rack_name(site, "tr", 1)
         rack(site, "tr", 1, "nordfiber", "core")
-        dev(names["patch"], H.T_PANEL, "patch-panel", site, "tr", tr, H.CORE_SLOTS["patch"], "nordfiber")
+        for key, pname in names["patch"].items():
+            dev(pname, H.T_PANEL, "patch-panel", site, "tr", tr, H.CORE_SLOTS["patch"][key], "nordfiber")
         dev(names["oob"], H.T_COPPER_SWITCH, "oob-switch", site, "tr", tr, H.CORE_SLOTS["oob"], "nordfiber")
         for i, n in enumerate(names["rtr"]):
             dev(n, H.T_ROUTER, "core-router", site, "tr", tr, H.CORE_SLOTS["rtr"][i], "nordfiber",

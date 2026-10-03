@@ -71,6 +71,9 @@ def run(nb):
     for path in H.DEVICE_TYPE_SOURCES:
         dt = create_device_type_from_yaml(nb, manufacturers, fetch_devicetype_yaml(path))
         types[dt.slug] = dt
+    for spec in H.CUSTOM_DEVICE_TYPES:
+        dt = create_device_type_from_yaml(nb, manufacturers, spec)
+        types[dt.slug] = dt
     module_types = {}
     for path in H.MODULE_TYPE_SOURCES:
         mt = create_module_type_from_yaml(nb, manufacturers, fetch_moduletype_yaml(path))
