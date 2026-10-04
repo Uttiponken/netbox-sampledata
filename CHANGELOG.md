@@ -2,6 +2,13 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
+## 0.5.2
+
+- An **Authors** section in the README: co-authored by JP and Claude (Claude Sonnet 5.5), the companies are
+  fictional, and the hardware sources are named (NetBox Community Device Type Library, the generic patch panel
+  defined here, Corning's ALTOS cable family, real places for the geography).
+- The README says how the dataset relates to the plugin releases. The data is unchanged.
+
 ## 0.5.1
 
 - Documentation only: design notes for the trunks, colours, strands and fiber circuits, a releases section and the
