@@ -149,3 +149,28 @@ Wireless links (no radio equipment in the scenario), customer CPE routers,
 a second wavelength customer at Oslo, a DCP-110 shelf in front of the
 Helsinki backbone wavelengths, a topology diagram plugin (none targets NetBox
 4.6 yet), power, and anything above management addressing and iBGP.
+
+## Authors
+
+Co-authored by JP and Claude (Anthropic's AI assistant, model **Claude Sonnet 5.5**, `claude-sonnet-5-5`, used
+through Claude Code): the scenario, the loader scripts, the checks and the documentation were developed together
+in pair-programming sessions. Every commit made with Claude's help carries a `Co-Authored-By: Claude Sonnet 5.5`
+line, so the model behind any change can be read from the history and compared with later ones.
+
+**Fictional companies, real hardware.** Nordfiber AB and every customer, partner, provider, contact and circuit in
+the dataset are invented; any resemblance to real companies or people is coincidental. The equipment is real
+hardware, taken from these sources:
+
+- **NetBox Community Device Type Library**
+  ([netbox-community/devicetype-library](https://github.com/netbox-community/devicetype-library)): Juniper MX204,
+  Arista DCS-7050SX3-48YC8-F and DCS-7010T-48, Dell PowerEdge R650 and OptiPlex SFF 7050, Smartoptics
+  DCP-M40-PAM4-ER and DCP-2, and the Smartoptics DCP-110 module. They are fetched live from the library when
+  `02_hardware.py` runs, never typed by hand, so the interfaces are the real ones.
+- **Defined in this dataset**, because the library has no such model: a generic 1U LC patch panel with 24 duplex
+  ports behind one 24-position rear port (the end of a 24-pair trunk), in `data/hardware.py`.
+- **Corning's ALTOS loose-tube cable family** (a real product line,
+  [corning.com](https://www.corning.com)) is the model for the fiber cable type: 48 fibers in four 12-fiber tubes
+  with the DIN/IEC 60304 fiber colour code. The figures are chosen for the scenario; use Corning's datasheets
+  for the real specification.
+- **Real places** (Stockholm, Gothenburg, Malmö, Oslo, Helsinki and the towns along the long-haul routes) give the
+  sites and the route geometry their coordinates; the cables, buildings and routes themselves are fictional.
