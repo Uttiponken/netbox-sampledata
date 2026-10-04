@@ -139,9 +139,9 @@ passes `verify.py`.
 
 The dataset is the test data of the print plugin
 ([netbox-trace-print](https://github.com/Uttiponken/netbox-trace-print)), which prints cable traces as PDF:
-long multi-site paths, 24-pair trunks, WDM services, fiber circuits and the colo tenants' chains. Release 0.5.0
-of the dataset goes with release 0.5.0 of the plugin; `docs/TESTING.md` in the plugin repository explains how
-to build the data and run the tests against it.
+long multi-site paths, 24-pair trunks, WDM services, fiber circuits and the colo tenants' chains. The
+plugin's tests and sample printouts (0.5.0 and later) use dataset release 0.5.x; `docs/TESTING.md` in the plugin
+repository explains how to build the data and run the tests against it.
 
 ## Not modeled, on purpose
 
