@@ -60,6 +60,49 @@ placeholder wavelengths, the duplicate-path bug, the `/trace/` limitation,
 the front-port mapping fields, the secrets session key) are all still true
 and are handled in the new layers.
 
+## After the rewrite (2026-10-03)
+
+Three changes made once the dataset was used to test the print plugin (`netbox-trace-print`). Each was rebuilt
+from an empty NetBox and verified.
+
+### 24-pair trunks (v0.3.0)
+
+Requirement: every panel-to-panel rear connection is a 24-pair fiber trunk, not 24 discrete cables.
+
+- A trunk is **one cable between two rear ports**, 24 pairs = 48 fibers, LC connectors. The panel is a custom
+  device type (`TRUNK_PANEL` in `data/hardware.py`, the community library has none): 1U, 24 duplex LC front
+  ports, ONE rear port `Trunk` with 24 positions, front port *n* mapped to position *n*.
+- One panel per trunk (kept deliberately). Each core rack holds a panel for the MeetMe trunk and one per
+  backbone trunk, at the same height at every site; the slot of the site itself stays free.
+- Consequence: one cable carries many paths (pair x direction), so anything that traces a trunk has to ask
+  which pair. The print plugin does.
+- The facility owners' placeholder panels have no trunk; `verify.py` allows only those.
+
+### Trunk colours (v0.4.0)
+
+Rule in `cabling.py`: a 24-pair trunk is green inside a site and blue between sites, decided from the sites of
+its two panels. Other fiber stays yellow, copper grey, DAC black. It is the plain NetBox cable colour; nothing
+here is specific to the print plugin, which just draws the colour NetBox stores.
+
+### Strands and fiber circuits (v0.5.0)
+
+- **Strand landing.** netbox-fms stores `front_port_a` / `front_port_b` on every `FiberStrand`. A trunk
+  panel's duplex LC port is one pair, so strands 2n-1 and 2n are landed on port n at both ends (FMS allows two
+  strands on one port). Done with a bulk update in `04_transport.py`.
+- **Circuits.** One `FiberCircuit` per trunk pair actually in use (`NF-FC-0001` to `-0005`, `FIBER_CIRCUITS` in
+  `data/transport.py`), `strand_count=2` with two circuit paths that start at the same duplex port, because FMS
+  models one strand per front port and a duplex port is two. Origin and destination are the line panel ports of
+  the two muxponders (`LINE_PATCH`). FMS follows rear-port cables whether or not they have an FMS record and
+  treats a front-to-front cable as a splice, so the two Helsinki circuits run through both MeetMe rooms and the
+  leased trunk.
+- **API quirks.** A circuit path cannot be created with an empty `path`, so it is seeded with its origin front
+  port and the circuit's `retrace` action fills it in; the API returns origin and destination as plain ids.
+- **Loss and wavelength.** 1550 nm, and the loss of the bare fiber end to end (0.21 dB/km plus 1.5 dB of
+  connectors), which comes to 55 to 192 dB. It is not a link budget; amplifiers are not modelled. The constants
+  are in `data/transport.py`.
+- **No circuit on `bb-cbl-00002`.** Stockholm-Malmö has no cabled path through it (`NF-BRG-0001` is cabled
+  router to router), so no pair is in use.
+
 ## Goal
 
 An educational dataset for a fresh NetBox install, built in stages that
@@ -1535,8 +1578,8 @@ any later cable save on WDM topology can regrow the rows; re-run it.
 
 ## Status
 
-Built by the layered scripts (`build.py`): 5 sites, 16 racks, 69 devices,
-131 cables, 6 circuits, 3 wavelength services, with `verify.py` passing on a
-fresh replay. See `README.md` for usage and `docs/INFRASTRUCTURE.md` for the
+Built by the layered scripts (`build.py`): 5 sites, 18 racks, 85 devices,
+142 cables, 6 circuits, 5 fiber circuits, 3 wavelength services, with
+`verify.py` (52 checks) passing on a fresh replay. See `README.md` for usage and `docs/INFRASTRUCTURE.md` for the
 finished dataset. What was deliberately left out is listed in `README.md`
 under "Not modeled, on purpose".

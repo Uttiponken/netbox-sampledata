@@ -130,6 +130,19 @@ what is left. The remaining differences are all deliberate (see
   vendors of the leased fiber to Helsinki; tenants as well as providers so
   they can own demarc panels.
 
+## Releases
+
+Tagged `v0.1.0` to `v0.5.0`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
+passes `verify.py`.
+
+## Used to test netbox-trace-print
+
+The dataset is the test data of the print plugin
+([netbox-trace-print](https://github.com/Uttiponken/netbox-trace-print)), which prints cable traces as PDF:
+long multi-site paths, 24-pair trunks, WDM services, fiber circuits and the colo tenants' chains. Release 0.5.0
+of the dataset goes with release 0.5.0 of the plugin; `docs/TESTING.md` in the plugin repository explains how
+to build the data and run the tests against it.
+
 ## Not modeled, on purpose
 
 Wireless links (no radio equipment in the scenario), customer CPE routers,
