@@ -2,6 +2,12 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
+## 0.5.3
+
+- Documentation only: the print plugin this dataset is used with was renamed from netbox-trace-print to
+  **netbox-tracepath-plugin** (0.7.0); the README and the design notes use the new name and the new repository
+  address. The data is unchanged. Entries below this one use the old name.
+
 ## 0.5.2
 
 - An **Authors** section in the README: co-authored by JP and Claude (Claude Sonnet 5.5), the companies are

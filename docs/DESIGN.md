@@ -62,7 +62,7 @@ and are handled in the new layers.
 
 ## After the rewrite (2026-10-03)
 
-Three changes made once the dataset was used to test the print plugin (`netbox-trace-print`). Each was rebuilt
+Three changes made once the dataset was used to test the print plugin (`netbox-tracepath-plugin`). Each was rebuilt
 from an empty NetBox and verified.
 
 ### 24-pair trunks (v0.3.0)
