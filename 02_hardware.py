@@ -22,7 +22,7 @@ import re
 import naming
 from common import (
     api, assign_contact, connect, create_device_type_from_yaml, create_module_type_from_yaml, ensure,
-    fetch_devicetype_yaml, fetch_moduletype_yaml, get_or_create, report,
+    fetch_devicetype_yaml, fetch_moduletype_yaml, get_or_create, have, report, skip,
 )
 from data import hardware as H
 from data.organization import CONTACT_ASSIGNMENTS, SITES, TENANTS
@@ -61,6 +61,22 @@ class Identity:
         return f"NF-{site}-{n:05d}"
 
 
+def wdm_nodes(nb, wdm_type, devices):
+    """
+    netbox-wdm makes a WdmNode only when a Device is CREATED while its profile exists. If the plugin was added after
+    the devices (a build that ran without it), the nodes are missing; make them here so a later run completes the
+    optical layer.
+    """
+    print("== WDM nodes ==")
+    for dev in devices.values():
+        if dev.device_type.id != wdm_type.id:
+            continue
+        if nb.plugins.wdm.wdm_nodes.get(device_id=dev.id):
+            continue
+        node = nb.plugins.wdm.wdm_nodes.create(device=dev.id, node_type=WDM_PROFILE["node_type"], grid=WDM_PROFILE["grid"])
+        report("wdm node", node, "created", dev.name)
+
+
 def run(nb):
     print("== Manufacturers and device types ==")
     manufacturers = {}
@@ -81,21 +97,24 @@ def run(nb):
 
     print("== WDM profile + 40-channel plan ==")
     wdm_type = types[H.T_WDM]
-    profile, st = ensure(nb.plugins.wdm.wdm_profiles, {"device_type_id": wdm_type.id}, device_type=wdm_type.id, **WDM_PROFILE)
-    report("wdm profile", profile, st)
-    made = 0
-    for n in range(1, 41):
-        if nb.plugins.wdm.wdm_channel_plans.get(profile_id=profile.id, grid_position=n):
-            continue
-        fpt = nb.dcim.front_port_templates.get(devicetype_id=wdm_type.id, name=str(920 + n))
-        # WdmChannelPlan keeps wavelength_nm as given and requires it unique per
-        # profile (the derived WdmChannel gets the real ITU value), so use a
-        # distinct placeholder per position.
-        nb.plugins.wdm.wdm_channel_plans.create(
-            profile=profile.id, grid_position=n, wavelength_nm=1550.0 + n, label="placeholder",
-            mux_front_port_template=fpt.id, demux_front_port_template=fpt.id)
-        made += 1
-    print(f"  channel plan entries created: {made} (of 40)")
+    if have("wdm"):
+        profile, st = ensure(nb.plugins.wdm.wdm_profiles, {"device_type_id": wdm_type.id}, device_type=wdm_type.id, **WDM_PROFILE)
+        report("wdm profile", profile, st)
+        made = 0
+        for n in range(1, 41):
+            if nb.plugins.wdm.wdm_channel_plans.get(profile_id=profile.id, grid_position=n):
+                continue
+            fpt = nb.dcim.front_port_templates.get(devicetype_id=wdm_type.id, name=str(920 + n))
+            # WdmChannelPlan keeps wavelength_nm as given and requires it unique per
+            # profile (the derived WdmChannel gets the real ITU value), so use a
+            # distinct placeholder per position.
+            nb.plugins.wdm.wdm_channel_plans.create(
+                profile=profile.id, grid_position=n, wavelength_nm=1550.0 + n, label="placeholder",
+                mux_front_port_template=fpt.id, demux_front_port_template=fpt.id)
+            made += 1
+        print(f"  channel plan entries created: {made} (of 40)")
+    else:
+        skip("wdm", "WDM profile and 40-channel plan")
 
     print("== Roles ==")
     roles = {r["slug"]: ensure(nb.dcim.device_roles, {"slug": r["slug"]}, **r)[0] for r in H.DEVICE_ROLES}
@@ -139,6 +158,9 @@ def run(nb):
             st = st if st == "created" else "updated"
         report("device", obj, st, f"{d['rack'] or 'unracked'}" + (f" U{int(d['position'])}" if d["position"] else ""))
         devices[d["name"]] = obj
+
+    if have("wdm"):
+        wdm_nodes(nb, wdm_type, devices)
 
     print("== DCP-110 modules in the DCP-2 shelves ==")
     for code, bays in H.DCP2_MODULE_BAYS.items():

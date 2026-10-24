@@ -9,13 +9,16 @@ credentials, spare assets.
   -> one encrypted login secret per router 01 (netbox-secrets)
   -> cold spares depot (netbox-inventory)
 
+Addresses, the ASN and the loopbacks are core NetBox. The iBGP sessions, the secrets and the spare assets each
+need their own plugin (netbox-bgp, netbox-secrets, netbox-inventory) and are skipped without it.
+
 Requires layers 1-2. Safe to re-run.
 """
 
 import itertools
 
 import layout
-from common import api, connect, ensure, get_secrets_session_key, report
+from common import api, connect, ensure, get_secrets_session_key, have, report, skip
 from data import services as S
 from data.organization import SITES, TENANTS
 from naming import room_slug, site_slug
@@ -58,10 +61,6 @@ def bgp(nb):
     asn, st = ensure(nb.ipam.asns, {"asn": S.BGP_ASN}, asn=S.BGP_ASN, rir=rir.id, description="Nordfiber AB",
                      tenant=tenants["nordfiber"].id)
     report("asn", asn, st)
-    group, st = ensure(nb.plugins.bgp.peer_group, {"name": S.PEER_GROUP["name"]}, local_as=asn.id, remote_as=asn.id,
-                       **S.PEER_GROUP)
-    report("peer group", group, st)
-
     loop = {}
     for n, code in enumerate(S.ROUTER_ORDER, start=1):
         dev = nb.dcim.devices.get(name=f"{code}-rtr-01")
@@ -71,6 +70,12 @@ def bgp(nb):
         report("loopback", ip, st, dev.name)
         loop[code] = (dev, ip)
 
+    if not have("bgp"):
+        skip("bgp", "the BGP peer group and the iBGP full mesh")
+        return
+    group, st = ensure(nb.plugins.bgp.peer_group, {"name": S.PEER_GROUP["name"]}, local_as=asn.id, remote_as=asn.id,
+                       **S.PEER_GROUP)
+    report("peer group", group, st)
     for a, b in itertools.combinations(S.ROUTER_ORDER, 2):
         name = f"{a}-rtr-01_{b}-rtr-01"
         obj, st = ensure(nb.plugins.bgp.session, {"name": name}, name=name, device=loop[a][0].id,
@@ -81,6 +86,9 @@ def bgp(nb):
 
 def secrets(nb):
     print("== Secrets ==")
+    if not have("secrets"):
+        skip("secrets", "one encrypted login per router")
+        return
     key = get_secrets_session_key(nb)
     role, st = ensure(nb.plugins.secrets.secret_roles, {"slug": S.SECRET_ROLE["slug"]}, **S.SECRET_ROLE)
     for code in S.ROUTER_ORDER:
@@ -96,9 +104,12 @@ def secrets(nb):
 
 def inventory(nb):
     print("== Spare assets ==")
+    if not have("inventory"):
+        skip("inventory", "the cold-spares depot")
+        return
     tenant = nb.tenancy.tenants.get(slug="nordfiber-ab")
-    sto = next(s for s in SITES if s["code"] == "sto")
-    location = nb.dcim.locations.get(slug=room_slug(sto, "tr"))
+    stn = next(s for s in SITES if s["code"] == "stn")
+    location = nb.dcim.locations.get(slug=room_slug(stn, "tr"))
     role, st = ensure(nb.plugins.inventory.asset_roles, {"slug": S.ASSET_ROLE["slug"]}, **S.ASSET_ROLE)
     for a in S.SPARE_ASSETS:
         dt = nb.dcim.device_types.get(slug=a["type"])

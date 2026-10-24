@@ -103,6 +103,95 @@ here is specific to the print plugin, which just draws the colour NetBox stores.
 - **No circuit on `bb-cbl-00002`.** Stockholm-Malmö has no cabled path through it (`NF-BRG-0001` is cabled
   router to router), so no pair is in use.
 
+## Stockholm as three availability zones (2026-10-24)
+
+Requirement: split the Stockholm datacenter into three zones, AWS-style, tie them together with fiber in
+municipal ducts, and move the long-haul terminations so each zone lands its own routes. Rebuilt from an empty
+NetBox and verified (70 checks).
+
+- **Sites.** `stn` (Sollentuna, North, HQ), `stw` (Södertälje, West), `ste` (Nacka, East), all full datacenters
+  (router/switch pair, OOB, MeetMe room, DCP-2 shelf), in the region Greater Stockholm. The `city` of a site is the
+  slug stem, so the three read `nordfiber-stockholm-north-dc` etc. and the room slugs follow. Management prefixes
+  keep the five old sites' addresses and give West and East `10.0.6.0/24` and `10.0.7.0/24`.
+- **Landing.** Gothenburg north, Oslo and NSN land in North; Malmö and a **new southern trunk to Gothenburg**
+  (`bb-cbl-00007`) land in West; BFN lands in East. A tenant-owned Baltic Retail is in all three zones because its
+  primary circuit now starts in West and its protect path in North.
+- **Ring cables are a second trunk type.** 288 fibers = 24 tubes of 12 = 144 pairs (the largest ALTOS loose-tube
+  count), on a 3U panel with 144 duplex LC ports behind one 144-position rear port (`TRUNK_PANEL_144`). The
+  panel slots in the core rack were re-planned (`CORE_SLOTS`): one 1U slot per long-haul peer and three 3U slots
+  for the zones, which moved everything below up by 8U at every site, so equipment still lines up between sites.
+  The OOB port plan changed for the same reason (up to six WDM nodes, DCP-2 on 9, others from 10, second router
+  and switch on 15/16).
+- **Tubes carry their use.** FMS has no per-fiber status, so the tube *name* is the plan: `Tube 1 - WDM` ... `Tube 13
+  - Nordfiber dark` ... `Tube 17 - leasable dark`. Reserved WDM pairs are only this label; the lit pair and the
+  leased pair are fiber circuits (`NF-FC-0007` to `-0010`). A leased dark pair has bare panel ports at both ends,
+  so NetBox has no cable path there and the print plugin says "nothing to print"; that is a plugin limit, not
+  a data error.
+- **Three parties per duct, kept apart.** The conduit belongs to the municipality (`Pathway.tenant`), the innerduct
+  to the cable's owner, the cable to Nordfiber or to Stockholm Metro Fibre AB (the leased West - East cable, with
+  a dark-fiber circuit `SMF-DF-0001` like the Helsinki vendor spans), the lessee is Nordfiber. The innerduct
+  endpoint of netbox-pathways has no tenant field, so its owner is set through the base `pathways` endpoint.
+- **Water crossings are `submarine` pathways** (the base `Pathway`, which accepts the type through the REST API;
+  there is no dedicated model). Lengths are not computed by the plugin, `plant.py` sets them. The pathways map does
+  not draw them.
+- **Dispersion is a verified property.** Two entrances per zone, one per ring cable; `verify.py` fails if a duct or
+  a structure outside the buildings is used by two cables. Shared *owners* are allowed and noted.
+- **The geometry is derived, not typed** (`tools/derive_metro.py` -> `data/metro_geometry.py`, generated, ODbL):
+  1. each land section is routed on the road network (OSRM), which is how the West - East link ends up on the
+     E4/E20, road 75 and road 222; waypoints that pull the route off the motorway were tried and removed;
+  2. the route is sampled every 700 m and each sample is placed in its municipality (Overpass `is_in`), which gives
+     the real borders; runs longer than 4.5 km are split again; the first and last leg at a datacenter are the
+     duct-bank lead-ins;
+  3. a water crossing exists only where the road distance between two shore chambers is several times the straight
+     line (6 to 9 times here), and the straight line between them is checked against OpenStreetMap's water areas;
+  4. a station that landed on a road bridge is moved along the route to dry land.
+  The first hand-typed guess had four structures in water and three ducts crossing lakes, which is why this is
+  done with data. Python 3.9 from the Command Line Tools cannot make the TLS connection to Overpass, so the
+  helper calls `curl`.
+- **Ownership is invented.** The municipalities are real, which of them owns which duct is not; the descriptions
+  say so.
+- **Idempotent, proved.** A second `build.py` over the finished dataset changes nothing. Two small fixes were
+  needed on the way: a moved structure is now reconciled (its location is compared apart, the API returns
+  GeoJSON), and the innerduct owner is set through the base endpoint.
+- **Reset script gotcha.** `tools/reset_netbox.sh` recreates only `demo-loader`: a personal superuser (for example
+  `admin`) is gone after a reset and must be created again with `createsuperuser`.
+
+## Plugins are optional (2026-10-24)
+
+Requirement: the dataset must load into a vanilla NetBox with no plugins, and use whichever of the six plugins it
+knows (pathways, fms, wdm, bgp, secrets, inventory) are installed. Until then the first plugin call (layer 2 creates
+the WDM profile) stopped a build on a NetBox without netbox-wdm. The print plugin must stay independent of the dataset.
+
+- **Detection** (`common.detect_plugins`). `/api/status/` lists the installed plugins; a plugin counts as usable
+  only if its REST root (`/api/plugins/<name>/`) also answers, so an installed plugin with a changed or broken API is
+  skipped with a reason instead of failing the build. `NETBOX_SKIP_PLUGINS=wdm,pathways` switches plugins off on purpose;
+  an unknown name stops the run (a typo must not look like success). `have(name)` asks, `skip(name, what)` prints
+  `[skipped] what: netbox-x is not installed`.
+- **What stays core.** Organization, hardware, all cabling, providers and circuits, the long-haul and ring cables
+  themselves (length, tenant, notes), circuit demarcs, prefixes, addresses, the ASN and the loopbacks. These are the
+  same objects with or without plugins, so `verify.py`'s 39 core checks (including the physical traces walked by
+  NetBox itself, through the muxponders and the MeetMe jumpers) run on a vanilla NetBox.
+- **What a plugin adds.** pathways: structures, ducts, crossings, cable segments, circuit geometries. fms: cable
+  records, tubes, strands landed on ports, fiber circuits. wdm: profile and channel plan, nodes, line ports, the
+  wavelength services, channel status, path pruning. bgp: peer group and sessions. secrets, inventory: one step each.
+- **Mixed steps were split, not duplicated.** `04_transport.py` created a core cable and its FMS record and pathway in
+  one loop; the loop now creates the cable always and the records only `if types` / `if have("pathways")`, so the
+  story of a cable is still told in one place. `06_services.py::bgp` makes the ASN and loopbacks always and the
+  sessions only with netbox-bgp. `build.py` streams every layer, collects the `[skipped]` lines and sums them up.
+- **Adding a plugin later works for all six**, including the awkward one. netbox-wdm creates a node only when a device is
+  created while its profile exists, so on devices that existed before the plugin the nodes are missing; layer 2 now
+  creates them (`wdm_nodes()`), and the channels follow from the node.
+- **Verified** against throwaway NetBox instances (the dev data was not touched): a plugin-free NetBox (build 39/0,
+  second build changes nothing); the same NetBox with only the print plugin added (its acceptance tests run, the ones that
+  need fms/wdm skip themselves); on a plugin-enabled NetBox from empty: everything switched off (39/0), then everything
+  but WDM (64/0), then everything (70/0, 18 nodes created late, 4 wavelength services stitched), then again (nothing
+  changes); a clean build with all plugins; and the dev NetBox re-run (70/0, nothing changes).
+- **Rejected.** A second, smaller "core" dataset (two things to keep in step); one script per plugin (the cables and
+  their records belong together); refusing to run without the plugins (the point of the change).
+- **The print plugin's tests moved here** (`tests/tracepath/`), because the dataset knows its own names and the plugin
+  must not. The plugin got a small test of its own that seeds a network and needs no data. The dependency now points one
+  way: this repository may mention and test the plugin; the plugin's repository does not mention this one.
+
 ## Goal
 
 An educational dataset for a fresh NetBox install, built in stages that

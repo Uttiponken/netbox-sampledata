@@ -1,11 +1,11 @@
 # Nordfiber AB — NetBox sample dataset
 
 An educational dataset for a fresh NetBox install: a fictional Nordic
-fiber-optic network operator, **Nordfiber AB**, with three datacenters
-(Stockholm, Gothenburg, Helsinki) and two points of presence (Malmö, Oslo),
-colocation customers, leased dark fiber, a DWDM transport layer with lit
-wavelength services, and everything from the building's racks and cables up
-to management addressing, iBGP and encrypted device credentials.
+fiber-optic network operator, **Nordfiber AB**, with five datacenters (Stockholm as
+three availability zones, North, West and East, plus Gothenburg and Helsinki) and two points of presence (Malmö,
+Oslo), colocation customers, leased dark fiber, a metro ring through the ducts of ten municipalities, a DWDM
+transport layer with lit wavelength services, and everything from the building's racks and cables up to
+management addressing, iBGP and encrypted device credentials.
 
 The scope is the **physical and inventory layers**: organization, sites and
 racks, devices, cabling, circuits, fiber plant, optical transport. Above
@@ -13,14 +13,32 @@ that only a thin slice (management IPs, loopbacks, iBGP, credentials) is
 modeled; VPNs, VLAN plans, service IPs and the like are out of scope, as is
 power.
 
-**Standalone project.** Everything is loaded over NetBox's REST API
+**Standalone project, plugins optional.** Everything is loaded over NetBox's REST API
 ([pynetbox](https://github.com/netbox-community/pynetbox)); point
-`NETBOX_URL`/`NETBOX_TOKEN` (in `.env`) at any reachable NetBox. It is
-developed against a local `netbox-docker` deployment with the plugins
-`netbox-bgp`, `-fms`, `-inventory`, `-otp`, `-secrets`, `-wdm`, `-floorplan`
-and `-pathways` (the last needs PostGIS). `docs/INFRASTRUCTURE.md` describes
+`NETBOX_URL`/`NETBOX_TOKEN` (in `.env`) at any reachable NetBox, **including a vanilla one with no plugins at
+all**. The core objects (organization, sites, racks, devices, cables, circuits, addressing) always load. Six
+plugins add layers on top when they are installed (see "Plugins" below), and the build says which it used. It is
+developed against a local `netbox-docker` deployment with `netbox-bgp`, `-fms`, `-inventory`, `-secrets`, `-wdm` and
+`-pathways` (the last needs PostGIS) installed. `docs/INFRASTRUCTURE.md` describes
 what the finished dataset looks like; `docs/DESIGN.md` records why it is
 built the way it is, and the history of how it got here.
+
+## Plugins
+
+| Plugin | What it adds | Without it |
+|---|---|---|
+| netbox-pathways (needs PostGIS) | Structures, duct banks, conduits, innerducts and water crossings of the Stockholm ring, the route of every long-haul and ring cable, circuit geometries | No map data; every cable and circuit is still there |
+| netbox-fms | Fiber cable records, tubes (named after their use), every strand landed on its panel port, fiber circuits for the trunk pairs in use or leased | The glass is a cable between two patch panels |
+| netbox-wdm | WDM nodes, the 40-channel plan, line ports, the four wavelength services | The muxponders and shelves are devices, cabled as usual |
+| netbox-bgp | The peer group and the 21 iBGP sessions | The ASN and the loopbacks are there |
+| netbox-secrets | One encrypted login per router | No logins |
+| netbox-inventory | The cold-spares depot | No spare assets |
+
+`build.py` lists the plugins it found at the start, prints `[skipped]` for every step it left out, and sums them up at
+the end; `verify.py` skips the matching groups of checks and counts them. On a vanilla NetBox the core checks
+(39 of the 70) pass. `NETBOX_SKIP_PLUGINS=wdm,pathways` switches plugins off on purpose, to see what a subset gives.
+Everything is idempotent, so installing a plugin later and running `build.py` again adds that plugin's part to the
+existing data.
 
 ## Layout
 
@@ -32,19 +50,24 @@ before it, plus an invariant check:
 | `01_organization.py` | Tenant groups, tenants, regions, site groups, sites, one Location per room, contacts and their assignments |
 | `02_hardware.py` | Manufacturers, device and module types (fetched live from the NetBox community library), the WDM profile and its 40-channel plan, roles, racks, devices (placed in uniform rack slots, with serials and asset tags), DCP-110 modules |
 | `03_cabling.py` | Cabling inside each building: core interconnects (full redundancy mesh at datacenters), out-of-band management, MeetMe-room jumpers and trunks, colo customers' chains, the Gothenburg office floor |
-| `04_transport.py` | Providers, circuits, the long-haul cables (own backbone, the leased Oslo pair, the two leased spans to Helsinki) with their fiber plant (netbox-fms: cable records, every strand landed on its panel port, a fiber circuit for each trunk pair in use) and routes (netbox-pathways), circuit geometries, cabled circuit demarcs |
-| `05_optical.py` | WDM line ports and cabling, DCP-2 client shelves, backbone handoffs, regeneration jumper, the three wavelength services (netbox-wdm) |
+| `plant.py` | The metro plant of the Stockholm ring (netbox-pathways): structures, duct banks, conduits with innerducts and submarine crossings, owned by the municipalities. Needs only layer 1, so it can be looked at on the pathways map before any cable is laid; `04_transport.py` runs it too |
+| `04_transport.py` | Providers, circuits, the long-haul cables (own backbone north and south, the leased Oslo pair, the two leased spans to Helsinki) and the three 288-fiber metro ring cables, with their fiber plant (netbox-fms: cable records, every strand landed on its panel port, a fiber circuit for each trunk pair in use or leased) and routes (netbox-pathways), circuit geometries, cabled circuit demarcs |
+| `05_optical.py` | WDM line ports and cabling, DCP-2 client shelves, backbone and ring handoffs, regeneration jumper, the four wavelength services (netbox-wdm) |
 | `06_services.py` | Management prefixes and addresses, loopbacks and iBGP full mesh (netbox-bgp), device credentials (netbox-secrets), spare assets (netbox-inventory) |
 | `07_finalize.py` | Prunes the duplicate wavelength paths netbox-wdm generates, re-checks stitching, prints totals |
 | `verify.py` | Read-only invariants: sites look alike, cables carry full attributes, planned connections exist, paths are continuous, routes match their cables, no stale text. Exits non-zero on failure |
 | `build.py` | Runs 01–07 then `verify.py` |
+| `tools/derive_metro.py` | One-off: derives the ring's geometry (`data/metro_geometry.py`) from OpenStreetMap roads and municipal borders. The build reads the result; run it only to change the route |
 
-Supporting code: `common.py` (API helpers, `ensure()`), `cabling.py` (the one
+A step that needs a plugin says so in its docstring and is skipped without it.
+
+Supporting code: `common.py` (API helpers, `ensure()`, plugin detection), `cabling.py` (the one
 place cables are made), `naming.py` (the naming convention), `layout.py`
 (site profiles → racks and devices), and `data/` (the scenario itself as
 plain Python: `organization`, `hardware`, `cabling`, `transport`, `optical`,
 `services`). `tools/` has `reset_netbox.sh` (wipe a local netbox-docker),
-`dump_state.py` and `diff_state.py` (compare two builds).
+`dump_state.py` and `diff_state.py` (compare two builds). `tests/tracepath/` has the optional acceptance tests of
+the print plugin (see below).
 
 **To change the scenario, edit `data/`**, not the scripts. Adding a site is
 one entry in `data/organization.py`; its racks and devices follow from the
@@ -118,9 +141,10 @@ what is left. The remaining differences are all deliberate (see
 ## Tenants
 
 - **Nordfiber AB** (Internal) — owns the sites and core infrastructure.
-- **Baltic Retail Group** (Customers) — an EPL Stockholm–Malmö with a
-  protect path via Gothenburg, and a colocated server and switch at each end.
-- **Polaris Cloud Services** (Customers) — colo at Stockholm and Gothenburg.
+- **Baltic Retail Group** (Customers) — an EPL Stockholm West–Malmö with a
+  protect path from Stockholm North via Gothenburg and a secondary wavelength over the southern route, a
+  colocated server and switch in all three Stockholm zones and in Malmö, and a leased dark pair on the metro ring.
+- **Polaris Cloud Services** (Customers) — colo at Stockholm North and Gothenburg.
 - **Västhamnen Logistics** (Customers) — colo at Gothenburg.
 - **Fjord Media Networks** (Customers) — a wavelength service Stockholm–Oslo.
 - **Skagerrak Interconnect AB**, **Öresund Exchange AB** (Facility
@@ -129,19 +153,32 @@ what is left. The remaining differences are all deliberate (see
   Networks OÜ** (Suppliers) — Nordfiber's Internet upstream and the two
   vendors of the leased fiber to Helsinki; tenants as well as providers so
   they can own demarc panels.
+- **Stockholm Metro Fibre AB** (Supplier) — owns the Södertälje–Nacka metro cable and leases it whole to Nordfiber;
+  **Mälar Kabelentreprenad AB** (Supplier) — installed the metro ducts and cables.
+- **Ten municipalities** (Municipalities) — Sollentuna, Danderyd, Lidingö, Nacka, Stockholm, Ekerö, Botkyrka, Salem,
+  Huddinge and Södertälje own the ducts in their territory. The municipalities are real; the ownership is invented
+  for the scenario.
 
 ## Releases
 
-Tagged `v0.1.0` to `v0.5.0`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
+Tagged `v0.1.0` to `v0.6.0`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
 passes `verify.py`.
 
-## Used to test netbox-tracepath-plugin
+## Optional: acceptance tests of netbox-tracepath-plugin
 
-The dataset is the test data of the print plugin
+The dataset is a good test bed for the print plugin
 ([netbox-tracepath-plugin](https://github.com/Uttiponken/netbox-tracepath-plugin)), which prints cable traces as PDF:
-long multi-site paths, 24-pair trunks, WDM services, fiber circuits and the colo tenants' chains. The
-plugin's tests and sample printouts (0.5.0 and later) use dataset release 0.5.x; `docs/TESTING.md` in the plugin
-repository explains how to build the data and run the tests against it.
+long multi-site paths, 24-pair trunks, WDM services, fiber circuits and the colo tenants' chains. The scripts that
+exercise the plugin against this data live here, in `tests/tracepath/`, and the plugin's own repository knows nothing
+about the dataset:
+
+```bash
+tests/tracepath/run.sh [path-to-netbox-docker]
+```
+
+It pipes each script into `manage.py shell` in the NetBox container. A script skips itself with a `[skipped]` line
+when the plugin, or the plugin it needs (netbox-fms, netbox-wdm), is not installed or the dataset is not loaded.
+The PDFs go to `/tmp/tp-out` in the container. Set `NETBOX_COMPOSE` to use another Compose setup.
 
 ## Not modeled, on purpose
 
@@ -167,10 +204,14 @@ hardware, taken from these sources:
   DCP-M40-PAM4-ER and DCP-2, and the Smartoptics DCP-110 module. They are fetched live from the library when
   `02_hardware.py` runs, never typed by hand, so the interfaces are the real ones.
 - **Defined in this dataset**, because the library has no such model: a generic 1U LC patch panel with 24 duplex
-  ports behind one 24-position rear port (the end of a 24-pair trunk), in `data/hardware.py`.
+  ports behind one 24-position rear port (the end of a 24-pair trunk), and a 3U one with 144 ports behind one
+  144-position rear port (the end of a metro ring cable), in `data/hardware.py`.
 - **Corning's ALTOS loose-tube cable family** (a real product line,
-  [corning.com](https://www.corning.com)) is the model for the fiber cable type: 48 fibers in four 12-fiber tubes
-  with the DIN/IEC 60304 fiber colour code. The figures are chosen for the scenario; use Corning's datasheets
-  for the real specification.
+  [corning.com](https://www.corning.com)) is the model for the fiber cable types: 48 fibers in four 12-fiber tubes
+  for the long-haul trunks, and 288 fibers in 24 tubes of 12 for the metro ring, with the DIN/IEC 60304 fiber
+  colour code. The figures are chosen for the scenario; use Corning's datasheets for the real specification.
 - **Real places** (Stockholm, Gothenburg, Malmö, Oslo, Helsinki and the towns along the long-haul routes) give the
   sites and the route geometry their coordinates; the cables, buildings and routes themselves are fictional.
+- **OpenStreetMap** (© OpenStreetMap contributors, [ODbL](https://www.openstreetmap.org/copyright)): the roads and
+  the municipal borders that the Stockholm metro ring follows (`tools/derive_metro.py`, `data/metro_geometry.py`).
+  The municipalities are real, but who owns which duct, and the ducts themselves, are invented.

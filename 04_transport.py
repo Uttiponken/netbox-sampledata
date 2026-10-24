@@ -3,13 +3,18 @@
 Layer 4: transport — everything between sites.
 
   providers, circuit types, circuits and their terminations
+  -> the metro plant (plant.py: structures, ducts, water crossings of the Stockholm ring)
   -> the long-haul cables (Nordfiber's own backbone, the leased Polarlink
-     pair, the two vendor spans to Helsinki), each with its fiber-plant
-     record (netbox-fms) and its real-world route (netbox-pathways)
+     pair, the two vendor spans to Helsinki) and the three metro ring cables, each with
+     its fiber-plant record (netbox-fms) and its real-world route (netbox-pathways)
   -> every strand landed on its panel port, and a fiber circuit (netbox-fms)
-     for each trunk pair that is in use
+     for each trunk pair that is in use or leased
   -> circuit geometries for the leased circuits
   -> the few circuit terminations that are physically cabled
+
+Providers, circuits, cables and demarcs are core NetBox and always loaded. The fiber plant (netbox-fms) and
+the routes, ducts and geometries (netbox-pathways) are added only when those plugins are installed; run the
+layer again after installing one and it fills in what is missing.
 
 A leased dark-fiber circuit stays a commercial record with uncabled
 terminations; the physical span is ONE direct Cable between the vendor's
@@ -19,9 +24,10 @@ backbone, so a trace follows the glass rather than the contract.
 Requires layers 1-3. Safe to re-run.
 """
 
+import plant
 from cabling import CT, Cabler
-from common import api, connect, ensure, linestring, report, route_km
-from data import optical as O
+from common import api, connect, ensure, have, linestring, report, route_km, skip
+from data import metro as M
 from data import transport as T
 from data.organization import SITES, TENANTS
 from naming import site_slug
@@ -59,37 +65,52 @@ def circuits(nb):
             report(f"  termination {side}", term, st, sites[code].name)
 
 
-def long_haul(nb, cabler):
-    print("== FMS cable type ==")
-    spec = dict(T.FMS_CABLE_TYPE)
-    mfr = nb.dcim.manufacturers.get(slug=spec.pop("manufacturer"))
-    cable_type, st = ensure(nb.plugins.fms.cable_types, {"model": spec["model"]}, manufacturer=mfr.id, **spec)
-    report("fms cable type", cable_type, st)
-    if st == "created":
-        for tube in T.FMS_BUFFER_TUBES:
-            nb.plugins.fms.buffer_tube_templates.create(fiber_cable_type=cable_type.id, **tube)
+def cable_types(nb):
+    """The two FMS cable types: the 48-fiber trunk cable and the 288-fiber metro cable, each with its tube templates."""
+    types = {}
+    if not have("fms"):
+        skip("fms", "fiber cable types")
+        return types
+    for fibers, base, tubes in ((48, T.FMS_CABLE_TYPE, T.FMS_BUFFER_TUBES), (288, T.FMS_CABLE_TYPE_288, T.FMS_BUFFER_TUBES_288)):
+        spec = dict(base)
+        mfr = nb.dcim.manufacturers.get(slug=spec.pop("manufacturer"))
+        cable_type, st = ensure(nb.plugins.fms.cable_types, {"model": spec["model"]}, manufacturer=mfr.id, **spec)
+        report("fms cable type", cable_type, st)
+        if st == "created":
+            for tube in tubes:
+                nb.plugins.fms.buffer_tube_templates.create(fiber_cable_type=cable_type.id, **tube)
+        types[fibers] = cable_type
+    return types
 
+
+def fiber_record(nb, cable, cable_type, key, km, notes, tenants):
+    """The netbox-fms record of one cable: type, serial, installer and sheath marks."""
+    detail = T.FIBER_DETAILS[key]
+    installer = tenants.get(detail["installer"]) if detail["installer"] else None
+    fc, st = ensure(nb.plugins.fms.fiber_cables, {"cable_id": cable.id}, cable=cable.id, fiber_cable_type=cable_type.id,
+                    notes=notes, serial_number=detail["serial_number"], install_date=detail["install_date"],
+                    installed_by=installer.id if installer else None, start_mark=0, end_mark=round(km * 1000))
+    report("fiber cable", fc, st, cable.label)
+    return fc
+
+
+def long_haul(nb, cabler, types):
     tenants = {t["code"]: nb.tenancy.tenants.get(slug=t["slug"]) for t in TENANTS}
-    plant = {}
+    plant_ = {}
     print("== Long-haul cables, fiber plant and routes ==")
     for key, a, b, note, fms_note in T.LONG_HAUL:
         route = T.ROUTES[key]
         km = route_km(route)
         # the leased Polarlink pair has no Tenant of its own; it is Nordfiber's cable
-        own = key in ("bb1", "bb2", "bb3", "bb4")
         cable = cabler.connect(("rearport",) + a, ("rearport",) + b, note=note,
-                               tenant="nordfiber-ab" if own else None, km=km)
-
-        detail = T.FIBER_DETAILS[key]
-        installer = tenants.get(detail["installer"]) if detail["installer"] else None
-        fc, st = ensure(nb.plugins.fms.fiber_cables, {"cable_id": cable.id}, cable=cable.id, fiber_cable_type=cable_type.id,
-                        notes=fms_note, serial_number=detail["serial_number"], install_date=detail["install_date"],
-                        installed_by=installer.id if installer else None, start_mark=0, end_mark=round(km * 1000))
-        report("fiber cable", fc, st, cable.label)
-        plant[key] = {"fiber_cable": fc, "a": a[0], "b": b[0], "km": km}
+                               tenant="nordfiber-ab" if key in T.NORDFIBER_CABLES else None, km=km)
+        fc = fiber_record(nb, cable, types[48], key, km, fms_note, tenants) if types else None
+        plant_[key] = {"fiber_cable": fc, "a": a[0], "b": b[0], "km": km, "strands": 48}
+        if not have("pathways"):
+            continue
 
         label = f"{cable.label}-route"
-        names = " -> ".join(n for n, _, _ in route)
+        names = " -> ".join(n for n, _, _ in route if n)
         comments = f"{names} ({km:.0f} km)"
         # `path` comes back as GeoJSON, so it can't go through ensure()'s plain comparison
         pathway, st = ensure(nb.plugins.pathways.direct_buried, {"label": label}, once=("path",), label=label,
@@ -100,17 +121,60 @@ def long_haul(nb, cabler):
         report("pathway", pathway, st, label)
         if not nb.plugins.pathways.cable_segments.get(cable_id=cable.id, pathway_id=pathway.id):
             nb.plugins.pathways.cable_segments.create(cable=cable.id, pathway=pathway.id, sequence=1)
-    return plant
+    if not types:
+        skip("fms", "fiber cable records for the long-haul cables")
+    if not have("pathways"):
+        skip("pathways", "routes and cable segments for the long-haul cables")
+    return plant_
+
+
+def metro_cables(nb, cabler, types):
+    """The three ring cables: 288-fiber cable between 144-pair panels, routed through the plant leg by leg."""
+    tenants = {t["code"]: nb.tenancy.tenants.get(slug=t["slug"]) for t in TENANTS}
+    plant_ = {}
+    print("== Metro ring cables, fiber plant and routes ==")
+    for l in M.LINKS:
+        key = l["key"]
+        km = M.cable_km(key)
+        a, b = ("rearport", l["a_panel"], "Trunk"), ("rearport", l["b_panel"], "Trunk")
+        owner = tenants[l["cable_owner"]]
+        cable = cabler.connect(a, b, note=l["note"], tenant=owner.slug, km=km)
+        fc = fiber_record(nb, cable, types[288], key, km, l["fms_note"], tenants) if types else None
+        plant_[key] = {"fiber_cable": fc, "a": l["a_panel"], "b": l["b_panel"], "km": km, "strands": 288}
+
+        if fc:
+            # the tube name carries what the tube is for: WDM, Nordfiber's dark fiber, or leasable dark fiber
+            for tube in nb.plugins.fms.buffer_tubes.filter(fiber_cable_id=fc.id):
+                want = f"Tube {tube.position} - {T.tube_use(tube.position)}"
+                if tube.name != want:
+                    tube.update({"name": want})
+
+        if have("pathways"):
+            for seq, pathway in enumerate(plant.cable_route(nb, key), start=1):
+                seg = nb.plugins.pathways.cable_segments.get(cable_id=cable.id, sequence=seq)
+                if seg is None:
+                    nb.plugins.pathways.cable_segments.create(cable=cable.id, pathway=pathway.id, sequence=seq)
+                elif (seg.pathway.id if seg.pathway else None) != pathway.id:
+                    seg.update({"pathway": pathway.id})
+            report("route", cable, "exists", f"{len(M.legs(key))} segments, {km} km")
+    if not types:
+        skip("fms", "fiber cable records and tube names for the ring cables")
+    if not have("pathways"):
+        skip("pathways", "routes through the ducts for the ring cables")
+    return plant_
 
 
 def _port_id(port):
     return port if isinstance(port, int) or port is None else port.id
 
 
-def strand_ports(nb, plant):
+def strand_ports(nb, plant_):
     """Land every strand on its panel port: strands 2n-1 and 2n of a trunk are pair n, port n at both ends."""
     print("== Strands on panel ports ==")
-    for key, info in plant.items():
+    if not have("fms"):
+        skip("fms", "landing strands on panel ports")
+        return
+    for key, info in plant_.items():
         ports = {side: {fp.name: fp.id for fp in nb.dcim.front_ports.filter(device=info[side])} for side in ("a", "b")}
         updates = []
         for strand in nb.plugins.fms.fiber_strands.filter(fiber_cable_id=info["fiber_cable"].id, limit=0):
@@ -120,17 +184,22 @@ def strand_ports(nb, plant):
                 updates.append({"id": strand.id, **want})
         if updates:
             nb.plugins.fms.fiber_strands.update(updates)
-        print(f"  [{'updated' if updates else 'exists '}] {key}: {len(updates)} of 48 strands landed on {info['a']} / {info['b']}")
+        print(f"  [{'updated' if updates else 'exists '}] {key}: {len(updates)} of {info['strands']} strands landed on "
+              f"{info['a']} / {info['b']}")
 
 
-def fiber_circuits(nb, plant):
-    """One netbox-fms fiber circuit per trunk pair in use, two paths (the duplex pair's two strands), traced."""
+def fiber_circuits(nb, plant_):
+    """One netbox-fms fiber circuit per trunk pair in use or leased, two paths (the duplex pair's two strands), traced."""
     print("== FMS fiber circuits ==")
-    tenant = nb.tenancy.tenants.get(slug=next(t["slug"] for t in TENANTS if t["code"] == "nordfiber"))
+    if not have("fms"):
+        skip("fms", "fiber circuits")
+        return
+    tenants = {t["code"]: nb.tenancy.tenants.get(slug=t["slug"]) for t in TENANTS}
     for fc in T.FIBER_CIRCUITS:
-        info = plant[fc["trunk"]]
-        origin_dev, origin_port = O.LINE_PATCH[fc["wdms"][0]]
+        info = plant_[fc["trunk"]]
+        (origin_dev, origin_port), _far = T.circuit_ends(fc)
         origin = nb.dcim.front_ports.get(device=origin_dev, name=f"Port {origin_port}")
+        tenant = tenants[fc.get("tenant", "nordfiber")]
         circuit, st = ensure(nb.plugins.fms.fiber_circuits, {"cid": fc["cid"]}, name=fc["name"], cid=fc["cid"],
                              status="active", strand_count=2, tenant=tenant.id, description=fc["description"])
         report("fiber circuit", circuit, st, fc["cid"])
@@ -148,12 +217,15 @@ def fiber_circuits(nb, plant):
 
 def geometries(nb):
     print("== Circuit geometries ==")
+    if not have("pathways"):
+        skip("pathways", "circuit geometries for the leased circuits")
+        return
     for c in T.CIRCUITS:
         if "geometry" not in c:
             continue
         route = T.ROUTES[c["geometry"]]
         circuit = nb.circuits.circuits.get(cid=c["cid"])
-        names = " -> ".join(n for n, _, _ in route)
+        names = " -> ".join(n for n, _, _ in route if n)
         geom = nb.plugins.pathways.circuit_geometries.get(circuit_id=circuit.id)
         if geom is None:
             geom = nb.plugins.pathways.circuit_geometries.create(circuit=circuit.id, path=linestring(route), comments=names)
@@ -177,10 +249,16 @@ def cabled_terminations(cabler):
 
 def run(nb):
     circuits(nb)
+    if have("pathways"):
+        plant.run(nb)
+    else:
+        skip("pathways", "the metro plant (structures, ducts, water crossings)")
     cabler = Cabler(nb)
-    plant = long_haul(nb, cabler)
-    strand_ports(nb, plant)
-    fiber_circuits(nb, plant)
+    types = cable_types(nb)
+    plant_ = long_haul(nb, cabler, types)
+    plant_.update(metro_cables(nb, cabler, types))
+    strand_ports(nb, plant_)
+    fiber_circuits(nb, plant_)
     geometries(nb)
     cabled_terminations(cabler)
     cabler.summary()

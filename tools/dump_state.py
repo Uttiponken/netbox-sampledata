@@ -15,7 +15,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import connect  # noqa: E402
+from common import connect, have  # noqa: E402
 
 
 def val(x):
@@ -91,35 +91,40 @@ def run(nb):
 
     s["modules"] = sorted(f"{m.device.name}:{m.module_bay.name}:{m.module_type.model}" for m in nb.dcim.modules.all())
 
-    # plugins
-    s["wdm"] = {
-        "nodes": {},
-        "circuits": {},
-        "wavelength_path_rows": len(list(nb.plugins.wdm.wdm_wavelength_paths.all())),
-    }
-    for n in nb.plugins.wdm.wdm_nodes.all():
-        dev = nb.dcim.devices.get(id=n.device.id if hasattr(n.device, "id") else n.device)
-        s["wdm"]["nodes"][dev.name] = len(list(nb.plugins.wdm.wdm_channels.filter(wdm_node_id=n.id)))
-    for c in nb.plugins.wdm.wdm_circuits.all():
-        s["wdm"]["circuits"][c.name] = dict(tenant=val(c.tenant), status=val(c.status))
+    # plugins (a section is left out when its plugin is not installed)
+    if have("wdm"):
+        s["wdm"] = {
+            "nodes": {},
+            "circuits": {},
+            "wavelength_path_rows": len(list(nb.plugins.wdm.wdm_wavelength_paths.all())),
+        }
+        for n in nb.plugins.wdm.wdm_nodes.all():
+            dev = nb.dcim.devices.get(id=n.device.id if hasattr(n.device, "id") else n.device)
+            s["wdm"]["nodes"][dev.name] = len(list(nb.plugins.wdm.wdm_channels.filter(wdm_node_id=n.id)))
+        for c in nb.plugins.wdm.wdm_circuits.all():
+            s["wdm"]["circuits"][c.name] = dict(tenant=val(c.tenant), status=val(c.status))
 
-    fms = []
-    for fc in nb.plugins.fms.fiber_cables.all():
-        cable = nb.dcim.cables.get(id=fc.cable.id if hasattr(fc.cable, "id") else fc.cable)
-        fms.append(" <> ".join(sorted(endpoint(t) for t in list(cable.a_terminations) + list(cable.b_terminations))))
-    s["fms_fiber_cables"] = sorted(fms)
+    if have("fms"):
+        fms = []
+        for fc in nb.plugins.fms.fiber_cables.all():
+            cable = nb.dcim.cables.get(id=fc.cable.id if hasattr(fc.cable, "id") else fc.cable)
+            fms.append(" <> ".join(sorted(endpoint(t) for t in list(cable.a_terminations) + list(cable.b_terminations))))
+        s["fms_fiber_cables"] = sorted(fms)
 
-    s["pathways"] = {p.label: dict(coordinates=p.path.coordinates if p.path else None, comments=p.comments)
-                     for p in nb.plugins.pathways.direct_buried.all()}
-    s["cable_segments"] = sorted(f"{x.cable.label} -> {x.pathway.label}" for x in nb.plugins.pathways.cable_segments.all())
-    s["circuit_geometries"] = {}
-    for g in nb.plugins.pathways.circuit_geometries.all():
-        cid = g.circuit.cid if hasattr(g.circuit, "cid") else g.circuit
-        s["circuit_geometries"][cid] = g.path.coordinates if g.path else None
+    if have("pathways"):
+        s["pathways"] = {p.label: dict(coordinates=p.path.coordinates if p.path else None, comments=p.comments)
+                         for p in nb.plugins.pathways.direct_buried.all()}
+        s["cable_segments"] = sorted(f"{x.cable.label} -> {x.pathway.label}" for x in nb.plugins.pathways.cable_segments.all())
+        s["circuit_geometries"] = {}
+        for g in nb.plugins.pathways.circuit_geometries.all():
+            cid = g.circuit.cid if hasattr(g.circuit, "cid") else g.circuit
+            s["circuit_geometries"][cid] = g.path.coordinates if g.path else None
 
-    s["bgp_sessions"] = sorted(x.name for x in nb.plugins.bgp.session.all())
-    s["secrets"] = sorted(f"{x.assigned_object.name}:{x.name}" for x in nb.plugins.secrets.secrets.all()
-                          if getattr(x, "assigned_object", None))
+    if have("bgp"):
+        s["bgp_sessions"] = sorted(x.name for x in nb.plugins.bgp.session.all())
+    if have("secrets"):
+        s["secrets"] = sorted(f"{x.assigned_object.name}:{x.name}" for x in nb.plugins.secrets.secrets.all()
+                              if getattr(x, "assigned_object", None))
     return s
 
 

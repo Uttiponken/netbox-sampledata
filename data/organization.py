@@ -8,21 +8,25 @@ the same kind are alike by construction rather than by copy-paste.
 Contact emails use the .example TLD (RFC 2606), never a real domain.
 """
 
+from data import metro
+from data.municipalities import NAMES as MUNICIPALITY_NAMES
+
 TENANT_GROUPS = [
     {"name": "Internal", "slug": "internal"},
     {"name": "Customers", "slug": "customers"},
     {"name": "Facility Operators", "slug": "facility-operators"},
     {"name": "Suppliers", "slug": "suppliers"},
+    {"name": "Municipalities", "slug": "municipalities"},
 ]
 
-# `code` is the short party name used in device names (e.g. sto-mmr-<code>-01).
+# `code` is the short party name used in device names (e.g. stn-mmr-<code>-01).
 TENANTS = [
     {"code": "nordfiber", "name": "Nordfiber AB", "slug": "nordfiber-ab", "group": "internal",
      "description": "Regional fiber-optic network operator headquartered in Stockholm; owns the sites and core infrastructure in this dataset."},
     {"code": "baltic-retail", "name": "Baltic Retail Group", "slug": "baltic-retail-group", "group": "customers",
-     "description": "Nordic retail chain. Leases inter-site WAN connectivity between its Stockholm and Malmö distribution centers, with a colocated server and switch at each end."},
+     "description": "Nordic retail chain. Leases WAN connectivity between its Stockholm and Malmö distribution centers; colocated server and switch in all three Stockholm datacenters and in Malmö."},
     {"code": "polaris", "name": "Polaris Cloud Services", "slug": "polaris-cloud-services", "group": "customers",
-     "description": "Cloud hosting provider. Colocates compute racks at the Stockholm and Gothenburg datacenters."},
+     "description": "Cloud hosting provider. Colocates compute racks at the Stockholm North and Gothenburg datacenters."},
     {"code": "vasthamnen", "name": "Västhamnen Logistics", "slug": "vasthamnen-logistics", "group": "customers",
      "description": "Port logistics and container-tracking operator. Colocates edge-compute servers at the Gothenburg datacenter for IoT telemetry from Port of Gothenburg operations."},
     {"code": "fjord", "name": "Fjord Media Networks", "slug": "fjord-media-networks", "group": "customers",
@@ -37,11 +41,22 @@ TENANTS = [
      "description": "Fictional Nordic fiber transit vendor; leases Nordfiber the primary Stockholm-Helsinki dark fiber (via Mariehamn and Vaasa)."},
     {"code": "bfn", "name": "Baltic Fibre Networks OÜ", "slug": "baltic-fibre-networks-ou", "group": "suppliers",
      "description": "Fictional Baltic fiber transit vendor; leases Nordfiber the backup Stockholm-Helsinki dark fiber (via Gotland, Riga and Tallinn)."},
+    {"code": "smf", "name": "Stockholm Metro Fibre AB", "slug": "stockholm-metro-fibre-ab", "group": "suppliers",
+     "description": "Fictional Stockholm metro fiber operator; owns the Södertälje - Nacka cable between Nordfiber's West and East datacenters and leases it, whole, to Nordfiber."},
+    {"code": "mkab", "name": "Mälar Kabelentreprenad AB", "slug": "malar-kabelentreprenad-ab", "group": "suppliers",
+     "description": "Fictional civil-works contractor that installed the metro ducts and cables around Stockholm."},
+    # The municipalities own the ducts in their territory: the ones the metro ring passes through (data/metro.py). In this
+    # fictional scenario the ownership is invented for the dataset; it says nothing about the real conduit owners.
+    *({"code": code, "name": MUNICIPALITY_NAMES[code][0], "slug": MUNICIPALITY_NAMES[code][1], "group": "municipalities",
+       "description": "Municipality in Stockholm County. Owner of the ducts in its territory in this fictional scenario "
+                      "(the ownership is invented for the dataset)."}
+      for code in metro.municipalities()),
 ]
 
 REGIONS = [
     {"name": "Nordics", "slug": "nordics", "parent": None},
     {"name": "Sweden", "slug": "sweden", "parent": "nordics"},
+    {"name": "Greater Stockholm", "slug": "greater-stockholm", "parent": "sweden"},
     {"name": "Norway", "slug": "norway", "parent": "nordics"},
     {"name": "Finland", "slug": "finland", "parent": "nordics"},
 ]
@@ -59,14 +74,28 @@ SITE_GROUPS = [
 # wdm_nodes: number of WDM terminal muxponders (named <code>-wdm-01..).
 # mgmt:      third octet of the site's 10.0.N.0/24 out-of-band prefix.
 SITES = [
-    {"code": "sto", "city": "stockholm", "name": "Nordfiber Stockholm DC", "kind": "dc", "region": "sweden",
-     "facility": "STO1", "address": "Kungsholms Strand 39, 112 27 Stockholm, Sweden", "tz": "Europe/Stockholm",
-     "lat": 59.3293, "lon": 18.0686, "description": "Primary datacenter and network core (HQ).",
-     "mm_owner": "nordfiber", "colo": ["polaris", "baltic-retail"], "wdm_nodes": 4, "growth_racks": 0, "mgmt": 1},
+    # Stockholm is three datacenters, one per availability zone, tied together by a metro ring (data/metro.py).
+    # `city` is the slug stem, so the three read "Stockholm North/West/East" everywhere.
+    {"code": "stn", "city": "stockholm-north", "name": "Nordfiber Stockholm North DC", "kind": "dc", "region": "greater-stockholm",
+     "facility": "STN1", "address": "Kabelvägen 1, 191 47 Sollentuna, Sweden", "tz": "Europe/Stockholm",
+     "lat": 59.4405, "lon": 17.9200,
+     "description": "Stockholm availability zone North (Sollentuna): primary datacenter and network core (HQ). "
+                    "Lands the northern routes to Gothenburg, Oslo and Helsinki.",
+     "mm_owner": "nordfiber", "colo": ["polaris", "baltic-retail"], "wdm_nodes": 5, "growth_racks": 0, "mgmt": 1},
+    {"code": "stw", "city": "stockholm-west", "name": "Nordfiber Stockholm West DC", "kind": "dc", "region": "greater-stockholm",
+     "facility": "STW1", "address": "Optikgatan 3, 151 36 Södertälje, Sweden", "tz": "Europe/Stockholm",
+     "lat": 59.1745, "lon": 17.6420,
+     "description": "Stockholm availability zone West (Södertälje). Lands the Malmö trunk and the southern route to Gothenburg.",
+     "mm_owner": "nordfiber", "colo": ["baltic-retail"], "wdm_nodes": 3, "growth_racks": 0, "mgmt": 6},
+    {"code": "ste", "city": "stockholm-east", "name": "Nordfiber Stockholm East DC", "kind": "dc", "region": "greater-stockholm",
+     "facility": "STE1", "address": "Glasfibervägen 7, 131 54 Nacka, Sweden", "tz": "Europe/Stockholm",
+     "lat": 59.3125, "lon": 18.1660,
+     "description": "Stockholm availability zone East (Nacka). Lands the backup route to Helsinki via Gotland, Riga and Tallinn.",
+     "mm_owner": "nordfiber", "colo": ["baltic-retail"], "wdm_nodes": 3, "growth_racks": 0, "mgmt": 7},
     {"code": "got", "city": "gothenburg", "name": "Nordfiber Gothenburg DC", "kind": "dc", "region": "sweden",
      "facility": "GOT1", "address": "Lindholmspiren 5, 417 56 Göteborg, Sweden", "tz": "Europe/Stockholm",
      "lat": 57.7089, "lon": 11.9746, "description": "Second full datacenter, on the west coast.",
-     "mm_owner": "skagerrak", "colo": ["polaris", "vasthamnen"], "wdm_nodes": 2, "growth_racks": 2, "mgmt": 2},
+     "mm_owner": "skagerrak", "colo": ["polaris", "vasthamnen"], "wdm_nodes": 3, "growth_racks": 2, "mgmt": 2},
     {"code": "mma", "city": "malmo", "name": "Nordfiber Malmö PoP", "kind": "pop", "region": "sweden",
      "facility": "MMA1", "address": "Hyllie Boulevard 21, 215 32 Malmö, Sweden", "tz": "Europe/Stockholm",
      "lat": 55.5636, "lon": 12.9819, "description": "Southern point of presence, near the Öresund Bridge crossing to Denmark.",
@@ -117,7 +146,7 @@ CONTACTS = [
 # object kinds: "site" (by site code), "tenant" (by party code), and — assigned
 # in the hardware layer once they exist — "rack" and "device" (by name).
 CONTACT_ASSIGNMENTS = [
-    *({"contact": "Erik Lindqvist", "role": "noc-engineer", "kind": "site", "ref": c} for c in ("sto", "got", "mma", "osl", "hel")),
+    *({"contact": "Erik Lindqvist", "role": "noc-engineer", "kind": "site", "ref": c} for c in ("stn", "stw", "ste", "got", "mma", "osl", "hel")),
     {"contact": "Astrid Nilsen", "role": "site-technician", "kind": "site", "ref": "osl"},
     {"contact": "Mikko Virtanen", "role": "site-technician", "kind": "site", "ref": "hel"},
     {"contact": "Maria Svensson", "role": "technical-contact", "kind": "tenant", "ref": "baltic-retail"},

@@ -37,7 +37,19 @@ TRUNK_PANEL = {
     "port-mappings": [{"front_port": f"Port {n}", "front_port_position": 1, "rear_port": "Trunk",
                        "rear_port_position": n} for n in range(1, 25)],
 }
-CUSTOM_DEVICE_TYPES = [TRUNK_PANEL]
+
+# The metro ring between Nordfiber's Stockholm datacenters is 288-fiber ALTOS cable: 144 pairs. Its panels are the
+# same idea, 144 duplex LC ports on the front and ONE rear port "Trunk" with 144 positions (position n carries front
+# port n), 3U high.
+TRUNK_PANEL_144 = {
+    "manufacturer": "Generic", "model": "LC-144 trunk patch panel (144-pair)", "slug": "generic-lc-144-trunk-patch-panel",
+    "part_number": "", "u_height": 3, "is_full_depth": False,
+    "rear-ports": [{"name": "Trunk", "type": "splice", "positions": 144}],
+    "front-ports": [{"name": f"Port {n}", "type": "lc"} for n in range(1, 145)],
+    "port-mappings": [{"front_port": f"Port {n}", "front_port_position": 1, "rear_port": "Trunk",
+                       "rear_port_position": n} for n in range(1, 145)],
+}
+CUSTOM_DEVICE_TYPES = [TRUNK_PANEL, TRUNK_PANEL_144]
 
 # Short names used in the layout/cabling data.
 T_ROUTER = "juniper-mx204"
@@ -46,6 +58,7 @@ T_COPPER_SWITCH = "arista-dcs-7010t-48"   # 48x1G copper + 4x10G SFP+: OOB, IDF 
 T_SERVER = "dell-poweredge-r650"
 T_WORKSTATION = "dell-optiplex-sff-7050"
 T_PANEL = "generic-lc-24-trunk-patch-panel"
+T_PANEL_144 = "generic-lc-144-trunk-patch-panel"
 T_WDM = "smartoptics-dcp-m40-pam4-er"
 T_DCP2 = "smartoptics-dcp-2"
 
@@ -81,42 +94,54 @@ MGMT_IFACE = {
 # Rack slots (NetBox position 42 = top), identical at every site, with a 2U gap
 # between different kinds of equipment so more can be added later.
 #   core rack:   trunk patch panels | gap | OOB switch | gap | routers, switches | gap | WDM nodes | gap | DCP-2
-#                A panel per trunk: "mmr" is the trunk to the MeetMe room, the others are the backbone trunks
-#                to that site. A panel sits at the same height at every site; the slot of the site itself stays free.
+#                A panel per trunk: "mmr" is the trunk to the MeetMe room, the others are the trunks to that
+#                site. A panel sits at the same height at every site; the slot of the site itself stays free.
+#                The three 144-pair ring panels are 3U (the slot is the lowest unit, as in NetBox).
 #   colo rack:   ToR panel | gap | tenant switch | gap | servers
 #   MeetMe rack: Nordfiber panel, facility owner's panel | gap | external parties
-CORE_SLOTS = {"patch": {"mmr": 42, "sto": 41, "got": 40, "mma": 39, "osl": 38},
-              "oob": 35, "rtr": (32, 31), "sw": (30, 29), "wdm_first": 26, "dcp2": 20}
+CORE_SLOTS = {"patch": {"mmr": 42, "got": 41, "mma": 40, "osl": 39, "stn": 36, "stw": 33, "ste": 30},
+              "oob": 27, "rtr": (24, 23), "sw": (22, 21), "wdm_first": 18, "dcp2": 12}
 
-# The backbone: one 24-pair trunk per pair of sites.
-BACKBONE_PAIRS = [("sto", "got"), ("sto", "mma"), ("sto", "osl"), ("got", "mma")]
+# The backbone: one 24-pair trunk per pair of sites. Stockholm has two trunks to Gothenburg, one from North and
+# one from West; Oslo and Malmö land on one zone each.
+BACKBONE_PAIRS = [("stn", "got"), ("stw", "got"), ("stw", "mma"), ("stn", "osl"), ("got", "mma")]
+# The Stockholm metro ring: one 144-pair trunk per pair of zones.
+RING_PAIRS = [("stn", "stw"), ("stn", "ste"), ("stw", "ste")]
 
 
 def backbone_peers(code):
-    """The sites a site has a backbone trunk to, in the fixed order sto, got, mma, osl."""
-    order = ["sto", "got", "mma", "osl"]
-    peers = {b if a == code else a for a, b in BACKBONE_PAIRS if code in (a, b)}
+    """The sites a site has a trunk to (backbone or ring), in the fixed order got, mma, osl, stn, stw, ste."""
+    order = ["got", "mma", "osl", "stn", "stw", "ste"]
+    peers = {b if a == code else a for a, b in BACKBONE_PAIRS + RING_PAIRS if code in (a, b)}
     return [c for c in order if c in peers]
+
+
+def panel_type(code, peer):
+    """The panel type at `code` for the trunk to `peer`: 144-pair on the ring, 24-pair everywhere else."""
+    return T_PANEL_144 if (code, peer) in RING_PAIRS or (peer, code) in RING_PAIRS else T_PANEL
 COLO_SLOTS = {"tor": 42, "sw": 39, "srv_first": 36}
 MEETME_SLOTS = {"nordfiber": 42, "owner": 41, "party_first": 38}
 IDF_SLOTS = {"sw": 42}
 
 # Colo customers' servers per (site, customer).
-COLO_SERVERS = {("sto", "polaris"): 2, ("sto", "baltic-retail"): 1, ("got", "polaris"): 1, ("got", "vasthamnen"): 1,
+COLO_SERVERS = {("stn", "polaris"): 2, ("stn", "baltic-retail"): 1, ("stw", "baltic-retail"): 1,
+                ("ste", "baltic-retail"): 1, ("got", "polaris"): 1, ("got", "vasthamnen"): 1,
                 ("mma", "baltic-retail"): 1}
 
 # External parties with a demarc panel in each site's MeetMe room, in rack order.
 MEETME_PARTIES = {
-    "sto": ["polaris", "nsn", "bfn", "baltic-retail"],
+    "stn": ["polaris", "nsn", "baltic-retail"],
+    "stw": ["baltic-retail"],
+    "ste": ["bfn", "baltic-retail"],
     "got": ["polaris", "vasthamnen", "vastkust"],
     "mma": ["baltic-retail"],
     "osl": [],
     "hel": ["nsn", "bfn"],
 }
 
-# DCP-110 modules installed in each site's DCP-2 shelf (Stockholm serves two wavelengths).
-DCP2_MODULE_BAYS = {"sto": ["slot-1/1", "slot-1/2"], "got": ["slot-1/1"], "mma": ["slot-1/1"],
-                    "osl": ["slot-1/1"], "hel": ["slot-1/1"]}
+# DCP-110 modules installed in each site's DCP-2 shelf (Stockholm North serves two wavelengths).
+DCP2_MODULE_BAYS = {"stn": ["slot-1/1", "slot-1/2"], "stw": ["slot-1/1"], "ste": ["slot-1/1"], "got": ["slot-1/1"],
+                    "mma": ["slot-1/1"], "osl": ["slot-1/1"], "hel": ["slot-1/1"]}
 
 # Management addressing: last octet by role within each site's 10.0.N.0/24.
 MGMT_HOST = {"rtr-01": 11, "sw-01": 12, "idf": 13, "ws": 14, "rtr-02": 15, "sw-02": 16, "srv": 21}

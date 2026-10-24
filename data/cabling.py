@@ -6,12 +6,13 @@ Port conventions (identical at every site, which is the point):
 
   trunk patch panel            24 duplex LC ports on the front, ONE rear port "Trunk" with 24 positions: the
   (Telecom Room)               rear is a 24-pair trunk (one cable, 48 fibers) to the panel at the other end,
-                               the FRONT goes to the equipment that uses the pair
+                               the FRONT goes to the equipment that uses the pair. The Stockholm metro ring uses
+                               144-pair panels (288-fiber cable) with the same logic.
   Nordfiber MeetMe panel       one port per external party; REAR = trunk to the
                                patch panel, FRONT = jumper to the party's own panel
   core rack                    rtr-01 xe-0/1/0 -> sw-01 Ethernet1 (+ the DC redundancy mesh)
-  OOB switch                   1 router-01, 2 switch-01, 3.. WDM nodes, 7 DCP-2,
-                               8.. everything else in the building, 13/14 router/switch 02,
+  OOB switch                   1 router-01, 2 switch-01, 3-8 WDM nodes, 9 DCP-2,
+                               10.. everything else in the building, 15/16 router/switch 02,
                                49 uplink to router-01 (50 to router-02 at DCs)
 """
 
@@ -28,8 +29,9 @@ from layout import colo_racks, core_names
 # port is lit by a WDM node (layer 5) instead.
 # ---------------------------------------------------------------------------
 PARTY_LINKS = {
-    "sto": {"polaris": (1, ("sw-01", "Ethernet2")), "nsn": (2, None), "bfn": (3, None),
-            "baltic-retail": (4, ("sw-01", "Ethernet3"))},
+    "stn": {"polaris": (1, ("sw-01", "Ethernet2")), "nsn": (2, None), "baltic-retail": (3, ("sw-01", "Ethernet3"))},
+    "stw": {"baltic-retail": (1, ("sw-01", "Ethernet2"))},
+    "ste": {"bfn": (1, None), "baltic-retail": (2, ("sw-01", "Ethernet2"))},
     "got": {"polaris": (1, ("sw-01", "Ethernet2")), "vasthamnen": (2, ("sw-01", "Ethernet3")),
             "vastkust": (3, ("rtr-01", "xe-0/1/1"))},
     "mma": {"baltic-retail": (1, ("sw-01", "Ethernet2"))},
@@ -75,8 +77,8 @@ def oob(site):
     add(2, names["sw"][0], H.MGMT_IFACE[H.T_AGG_SWITCH])
     for i, w in enumerate(names["wdm"]):
         add(3 + i, w, H.MGMT_IFACE[H.T_WDM])
-    add(7, names["dcp2"], H.MGMT_IFACE[H.T_DCP2])
-    nxt = 8
+    add(9, names["dcp2"], H.MGMT_IFACE[H.T_DCP2])
+    nxt = 10
     if c == "got":
         add(nxt, H.IDF_SWITCH_NAME, H.MGMT_IFACE[H.T_COPPER_SWITCH])
         nxt += 1
@@ -89,8 +91,8 @@ def oob(site):
             add(nxt, f"{tenant}-{c}-srv-{n:02d}", H.MGMT_IFACE[H.T_SERVER])
             nxt += 1
     if site["kind"] == "dc":
-        add(13, names["rtr"][1], H.MGMT_IFACE[H.T_ROUTER])
-        add(14, names["sw"][1], H.MGMT_IFACE[H.T_AGG_SWITCH])
+        add(15, names["rtr"][1], H.MGMT_IFACE[H.T_ROUTER])
+        add(16, names["sw"][1], H.MGMT_IFACE[H.T_AGG_SWITCH])
     plan.append((I(names["oob"], "Ethernet49"), I(names["rtr"][0], "xe-0/1/2"), "OOB uplink"))
     if site["kind"] == "dc":
         plan.append((I(names["oob"], "Ethernet50"), I(names["rtr"][1], "xe-0/1/2"), "OOB uplink (second router)"))

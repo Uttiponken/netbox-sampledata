@@ -17,15 +17,19 @@ import re
 import sys
 
 import layout
-from common import api, connect
+import naming
+from common import PLUGIN_STATE, api, connect, have
 from data import cabling as C
 from data import hardware as H
+from data import metro as M
 from data import optical as O
+from data import services as S
 from data import transport as T
-from data.organization import SITES
+from data.organization import SITES, TENANTS
 
 FAILS = []
 PASSED = 0
+SKIPPED = []
 
 
 def check(name, ok, detail=""):
@@ -36,6 +40,12 @@ def check(name, ok, detail=""):
     else:
         FAILS.append(name)
         print(f"  FAIL  {name}  {detail}")
+
+
+def skip_checks(plugin, what):
+    """A group of checks that needs a plugin the NetBox does not have (or that was switched off)."""
+    SKIPPED.append(what)
+    print(f"  skip  {what}: netbox-{plugin} {PLUGIN_STATE[plugin]}")
 
 
 def end(t):
@@ -124,6 +134,13 @@ def run(nb):
     check("cable labels are unique", len(labels) == len(set(labels)))
 
     print("== Cable tenancy ==")
+    tenant_slug = {t["code"]: t["slug"] for t in TENANTS}
+    ring_key = {}                       # cable label -> link key, for the metro ring's three cables
+    for l in M.LINKS:
+        rc = cabled(("rearport", l["a_panel"], "Trunk"), ("rearport", l["b_panel"], "Trunk"))
+        if rc:
+            ring_key[rc.label] = l["key"]
+    ring_owner = {label: tenant_slug[M.link(key)["cable_owner"]] for label, key in ring_key.items()}
     wrong = []
     for c in cables:
         ends = list(c.a_terminations) + list(c.b_terminations)
@@ -133,6 +150,8 @@ def run(nb):
         else:
             ext = {d.tenant.slug for d in devs if d.tenant and d.tenant.slug != "nordfiber-ab"}
             want = ext or {"nordfiber-ab"}
+        if c.label in ring_owner:
+            want = {ring_owner[c.label]}
         if c.tenant.slug not in want:
             wrong.append(f"{c.label}={c.tenant.slug}")
     check("external party wins; OOB and own kit are Nordfiber's", not wrong, str(wrong))
@@ -170,12 +189,18 @@ def run(nb):
     for _, a, b, _, _ in T.LONG_HAUL:
         if not cabled(("rearport",) + a, ("rearport",) + b):
             missing.append(f"{a[0]} <> {b[0]}")
+    for l in M.LINKS:
+        if not cabled(("rearport", l["a_panel"], "Trunk"), ("rearport", l["b_panel"], "Trunk")):
+            missing.append(f"{l['a_panel']} <> {l['b_panel']}")
     check("all planned cables present", not missing, str(missing))
 
     print("== Trunks ==")
     panels = [d for d in devices.values() if d.role.slug == "patch-panel"]
-    check("every patch panel is a 24-port panel with one 24-position trunk",
-          all(d.device_type.slug == "generic-lc-24-trunk-patch-panel" for d in panels))
+    check("every patch panel is a 24-pair panel, except the metro ring's 144-pair panels",
+          all(d.device_type.slug == (H.T_PANEL_144 if (d.name.split("-")[0], d.name.split("-")[2]) in
+                                    {(a, b) for a, b in H.RING_PAIRS} | {(b, a) for a, b in H.RING_PAIRS} else H.T_PANEL)
+              for d in panels if "-patch-" in d.name),
+          str([d.name for d in panels if "-patch-" in d.name]))
     trunk_ends, discrete = {}, []
     for c in cables:
         ends = list(c.a_terminations) + list(c.b_terminations)
@@ -192,32 +217,40 @@ def run(nb):
             and not any(d.name in panels_ for panels_, _c in trunk_ends.values())]
     check("no panel is left without its trunk (the facility owners' placeholders excepted)", not lone, str(lone))
     check("no panel has discrete one-pair rear cables any more", not discrete, str(discrete))
-    check("long-haul and vendor trunks have 48-fiber FMS records",
-          all(fc.fiber_cable_type.strand_count == 48 for fc in nb.plugins.fms.fiber_cables.all()))
+    ring_labels = set(ring_key)
+    if have("fms"):
+        check("long-haul and vendor trunks have 48-fiber FMS records, the metro ring cables 288-fiber",
+              all(fc.fiber_cable_type.strand_count == (288 if fc.cable.label in ring_labels else 48)
+                  for fc in nb.plugins.fms.fiber_cables.all()))
+    else:
+        skip_checks("fms", "FMS cable records")
 
-    print("== Fiber strands and circuits ==")
-    badly_landed = []
-    for s in nb.plugins.fms.fiber_strands.filter(limit=0):
-        want = f"Port {(s.position + 1) // 2}"
-        a, b = s.front_port_a, s.front_port_b
-        if not (a and b and a.name == b.name == want and a.device.id != b.device.id):
-            badly_landed.append(f"{s.fiber_cable}/{s.name}")
-    check("every strand is landed on its pair's panel port at both ends (strands 2n-1, 2n -> Port n)",
-          not badly_landed, str(badly_landed[:5]))
-    fcs = {fc.cid: fc for fc in nb.plugins.fms.fiber_circuits.all()}
-    check("one FMS fiber circuit per trunk pair in use", set(fcs) == {c["cid"] for c in T.FIBER_CIRCUITS}, str(sorted(fcs)))
-    for plan in T.FIBER_CIRCUITS:
-        fc = fcs.get(plan["cid"])
-        paths = list(nb.plugins.fms.fiber_circuit_paths.filter(circuit_id=fc.id)) if fc else []
-        (o_dev, o_port), (d_dev, d_port) = (O.LINE_PATCH[w] for w in plan["wdms"])
-        want_ends = (o_dev, f"Port {o_port}", d_dev, f"Port {d_port}")
-        def port(pk):                                # the FMS serializer returns plain ids for these
-            fp = nb.dcim.front_ports.get(pk)
-            return fp.device.name, fp.name
-        got = {port(p.origin) + port(p.destination) for p in paths if p.destination}
-        check(f"{plan['cid']}: 2 strands, both paths complete {want_ends[0]}:{want_ends[1]} -> {want_ends[2]}:{want_ends[3]}",
-              bool(fc) and fc.strand_count == 2 and len(paths) == 2 and all(p.is_complete for p in paths)
-              and got == {want_ends}, f"{got}")
+    if have("fms"):
+        print("== Fiber strands and circuits ==")
+        badly_landed = []
+        for s in nb.plugins.fms.fiber_strands.filter(limit=0):
+            want = f"Port {(s.position + 1) // 2}"
+            a, b = s.front_port_a, s.front_port_b
+            if not (a and b and a.name == b.name == want and a.device.id != b.device.id):
+                badly_landed.append(f"{s.fiber_cable}/{s.name}")
+        check("every strand is landed on its pair's panel port at both ends (strands 2n-1, 2n -> Port n)",
+              not badly_landed, str(badly_landed[:5]))
+        fcs = {fc.cid: fc for fc in nb.plugins.fms.fiber_circuits.all()}
+        check("one FMS fiber circuit per trunk pair in use or leased", set(fcs) == {c["cid"] for c in T.FIBER_CIRCUITS}, str(sorted(fcs)))
+        for plan in T.FIBER_CIRCUITS:
+            fc = fcs.get(plan["cid"])
+            paths = list(nb.plugins.fms.fiber_circuit_paths.filter(circuit_id=fc.id)) if fc else []
+            (o_dev, o_port), (d_dev, d_port) = T.circuit_ends(plan)
+            want_ends = (o_dev, f"Port {o_port}", d_dev, f"Port {d_port}")
+            def port(pk):                                # the FMS serializer returns plain ids for these
+                fp = nb.dcim.front_ports.get(pk)
+                return fp.device.name, fp.name
+            got = {port(p.origin) + port(p.destination) for p in paths if p.destination}
+            check(f"{plan['cid']}: 2 strands, both paths complete {want_ends[0]}:{want_ends[1]} -> {want_ends[2]}:{want_ends[3]}",
+                  bool(fc) and fc.strand_count == 2 and len(paths) == 2 and all(p.is_complete for p in paths)
+                  and got == {want_ends}, f"{got}")
+    else:
+        skip_checks("fms", "fiber strands and circuits")
 
     print("== Physical paths, traced by NetBox ==")
 
@@ -234,63 +267,162 @@ def run(nb):
         return f"{end_['device']['name']}:{end_['name']}"
 
     expected = [
-        ("sto-dcp2-01", "Line/1/1", "osl-dcp2-01:Line/1/1"),                 # Fjord, through two trunks and two muxponders
-        ("sto-dcp2-01", "Line/2/1", "mma-dcp2-01:Line/1/1"),                 # Baltic Retail protect, regenerated in Gothenburg
-        ("sto-rtr-01", "et-0/0/2", "hel-rtr-01:et-0/0/2"),                   # Helsinki over NSN
-        ("sto-rtr-02", "et-0/0/3", "hel-rtr-02:et-0/0/3"),                   # Helsinki over BFN
-        ("polaris-sto-sw-01", "Ethernet49", "sto-sw-01:Ethernet2"),
-        ("baltic-retail-sto-sw-01", "Ethernet49", "sto-sw-01:Ethernet3"),
+        ("stn-dcp2-01", "Line/1/1", "osl-dcp2-01:Line/1/1"),                 # Fjord, through two trunks and two muxponders
+        ("stn-dcp2-01", "Line/2/1", "mma-dcp2-01:Line/1/1"),                 # Baltic Retail protect, regenerated in Gothenburg
+        ("stw-dcp2-01", "Line/1/1", "got-dcp2-01:Line/1/1"),                 # Baltic Retail secondary, the southern route
+        ("stn-rtr-01", "et-0/0/2", "hel-rtr-01:et-0/0/2"),                   # Helsinki over NSN
+        ("ste-rtr-02", "et-0/0/3", "hel-rtr-02:et-0/0/3"),                   # Helsinki over BFN
+        ("stn-rtr-01", "et-0/0/3", "stw-rtr-01:et-0/0/2"),                   # the ring, North - West
+        ("stn-rtr-02", "et-0/0/3", "ste-rtr-01:et-0/0/2"),                   # the ring, North - East
+        ("stw-rtr-02", "et-0/0/3", "ste-rtr-01:et-0/0/3"),                   # the ring, West - East (leased)
+        ("polaris-stn-sw-01", "Ethernet49", "stn-sw-01:Ethernet2"),
+        ("baltic-retail-stn-sw-01", "Ethernet49", "stn-sw-01:Ethernet3"),
+        ("baltic-retail-stw-sw-01", "Ethernet49", "stw-sw-01:Ethernet2"),
+        ("baltic-retail-ste-sw-01", "Ethernet49", "ste-sw-01:Ethernet2"),
         ("polaris-got-sw-01", "Ethernet49", "got-sw-01:Ethernet2"),
         ("vasthamnen-got-sw-01", "Ethernet49", "got-sw-01:Ethernet3"),
         ("baltic-retail-mma-sw-01", "Ethernet49", "mma-sw-01:Ethernet2"),
         ("got-rtr-01", "xe-0/1/1", "circuit:VKB-INET-0001:A"),
-        ("sto-rtr-01", "et-0/0/0", "mma-rtr-01:et-0/0/0"),                   # the Baltic Retail circuit
+        ("stw-rtr-01", "et-0/0/0", "mma-rtr-01:et-0/0/0"),                   # the Baltic Retail circuit
     ]
     for dev, port, want in expected:
         got = trace_end(dev, port)
         check(f"{dev}:{port} -> {want}", got == want, f"got {got}")
 
-    print("== Optical services ==")
-    for wc in nb.plugins.wdm.wdm_circuits.all():
-        check(f"{wc.name} has an attached path", bool(wc.wavelength_paths))
-    check("only the 3 attached wavelength paths remain", nb.plugins.wdm.wdm_wavelength_paths.count() == 3,
-          str(nb.plugins.wdm.wdm_wavelength_paths.count()))
-    muxponders = [d for d in devices.values() if d.role.slug == "wdm-terminal"]
-    check("every muxponder has its 40 channels",
-          all(nb.plugins.wdm.wdm_channels.count(wdm_node_id=nb.plugins.wdm.wdm_nodes.get(device_id=d.id).id) == 40
-              for d in muxponders))
+    if have("wdm"):
+        print("== Optical services ==")
+        for wc in nb.plugins.wdm.wdm_circuits.all():
+            check(f"{wc.name} has an attached path", bool(wc.wavelength_paths))
+        check(f"only the {len(O.WDM_CIRCUITS)} attached wavelength paths remain",
+              nb.plugins.wdm.wdm_wavelength_paths.count() == len(O.WDM_CIRCUITS),
+              str(nb.plugins.wdm.wdm_wavelength_paths.count()))
+        muxponders = [d for d in devices.values() if d.role.slug == "wdm-terminal"]
+        check("every muxponder has its 40 channels",
+              all(nb.plugins.wdm.wdm_channels.count(wdm_node_id=nb.plugins.wdm.wdm_nodes.get(device_id=d.id).id) == 40
+                  for d in muxponders))
+    else:
+        skip_checks("wdm", "optical services")
 
     print("== Geography ==")
     long_haul = [c for c in cables if c.label and c.label.startswith("bb-")]
-    check("every long-haul cable has an FMS record", nb.plugins.fms.fiber_cables.count() == len(long_haul),
-          f"{nb.plugins.fms.fiber_cables.count()} vs {len(long_haul)}")
-    check("every long-haul cable has a pathway segment", nb.plugins.pathways.cable_segments.count() == len(long_haul))
-    site_pos = {s.slug: (float(s.longitude), float(s.latitude)) for s in nb.dcim.sites.all() if s.latitude}
-    seg_by_cable = {}
-    for seg in nb.plugins.pathways.cable_segments.all():
-        seg_by_cable[seg.cable.id] = seg
-    off = []
-    for c in long_haul:
-        seg = seg_by_cable.get(c.id)
-        if not seg:
-            continue
-        coords = nb.plugins.pathways.direct_buried.get(id=seg.pathway.id).path.coordinates
-        ends_sites = [site_pos[t.object.device.site.slug] for t in list(c.a_terminations) + list(c.b_terminations)]
-        pairs = [(coords[0], ends_sites[0], coords[-1], ends_sites[1]), (coords[0], ends_sites[1], coords[-1], ends_sites[0])]
-        ok = any(haversine_km(*p[0], *p[1]) < 15 and haversine_km(*p[2], *p[3]) < 15 for p in pairs)
-        if not ok:
-            off.append(c.label)
-        km = c.length
-        route_len = sum(haversine_km(*coords[i], *coords[i + 1]) for i in range(len(coords) - 1))
-        if abs(float(km) - route_len) > 1:
-            off.append(f"{c.label} length")
-    check("route geometry starts and ends at the cable's own sites, length matches", not off, str(off))
-    geoms = nb.plugins.pathways.circuit_geometries.count()
-    check("leased circuits have geometries", geoms == sum(1 for c in T.CIRCUITS if "geometry" in c), str(geoms))
+    if have("fms"):
+        check("every long-haul cable has an FMS record", nb.plugins.fms.fiber_cables.count() == len(long_haul),
+              f"{nb.plugins.fms.fiber_cables.count()} vs {len(long_haul)}")
+    else:
+        skip_checks("fms", "FMS records of the long-haul cables")
+    if have("pathways"):
+        segs_by_cable = {}
+        for seg in nb.plugins.pathways.cable_segments.all():
+            segs_by_cable.setdefault(seg.cable.id, []).append(seg)
+        check("every long-haul cable has a pathway segment, the ring cables one per leg",
+              all(len(segs_by_cable.get(c.id, [])) == (len(M.legs(ring_key[c.label])) if c.label in ring_key else 1)
+                  for c in long_haul))
+        site_pos = {s.slug: (float(s.longitude), float(s.latitude)) for s in nb.dcim.sites.all() if s.latitude}
+        seg_by_cable = {cid: segs[0] for cid, segs in segs_by_cable.items()}
+        off = []
+        for c in long_haul:
+            seg = seg_by_cable.get(c.id)
+            if not seg or c.label in ring_labels:
+                continue
+            coords = nb.plugins.pathways.direct_buried.get(id=seg.pathway.id).path.coordinates
+            ends_sites = [site_pos[t.object.device.site.slug] for t in list(c.a_terminations) + list(c.b_terminations)]
+            pairs = [(coords[0], ends_sites[0], coords[-1], ends_sites[1]), (coords[0], ends_sites[1], coords[-1], ends_sites[0])]
+            ok = any(haversine_km(*p[0], *p[1]) < 15 and haversine_km(*p[2], *p[3]) < 15 for p in pairs)
+            if not ok:
+                off.append(c.label)
+            km = c.length
+            route_len = sum(haversine_km(*coords[i], *coords[i + 1]) for i in range(len(coords) - 1))
+            if abs(float(km) - route_len) > 1:
+                off.append(f"{c.label} length")
+        check("route geometry starts and ends at the cable's own sites, length matches", not off, str(off))
+        geoms = nb.plugins.pathways.circuit_geometries.count()
+        check("leased circuits have geometries", geoms == sum(1 for c in T.CIRCUITS if "geometry" in c), str(geoms))
+    else:
+        skip_checks("pathways", "routes and geometries")
+
+    if have("pathways"):
+        print("== Stockholm metro plant ==")
+        pw = nb.plugins.pathways
+        structs = {x.name: x for x in pw.structures.all()}
+        check("every structure of the plan exists, owned by its municipality (or Nordfiber)",
+              set(structs) == set(M.structures()) and
+              all(structs[n].tenant and structs[n].tenant.slug == tenant_slug[M.structures()[n][3]] for n in structs),
+              str(set(structs) ^ set(M.structures())))
+        entrance_site = {name: code for code, links in M.ENTRANCES.items() for name in links.values()}
+        check("each datacenter has one entrance per ring link, on its own site",
+              all(structs[n].site and structs[n].site.slug == next(naming.site_slug(s) for s in SITES if s["code"] == c)
+                  for n, c in entrance_site.items()))
+        used_structs, used_paths, bad = {}, {}, []
+        base_by_id = {x.id: x for x in pw.pathways.all()}
+        for l in M.LINKS:
+            key = l["key"]
+            cable = cabled(("rearport", l["a_panel"], "Trunk"), ("rearport", l["b_panel"], "Trunk"))
+            segs = sorted(segs_by_cable.get(cable.id, []), key=lambda x: x.sequence) if cable else []
+            legs_ = M.legs(key)
+            if len(segs) != len(legs_):
+                bad.append(f"{key}: {len(segs)} segments for {len(legs_)} legs")
+                continue
+            total = 0.0
+            for n, (seg, leg) in enumerate(zip(segs, legs_), start=1):
+                p = base_by_id[seg.pathway.id]
+                total += float(p.length or 0)
+                used_paths.setdefault(p.id, set()).add(key)
+                for end_ in (p.start_structure, p.end_structure):
+                    if end_:
+                        used_structs.setdefault(end_.name, set()).add(key)
+                if (p.start_structure.name, p.end_structure.name) != (leg["a"], leg["b"]):
+                    bad.append(f"{key} leg {n}: {p.start_structure.name} -> {p.end_structure.name}")
+                # the innermost pathway belongs to the cable's owner, the water crossing to Nordfiber; the conduit around
+                # an innerduct belongs to the municipality
+                want_owner = tenant_slug["nordfiber" if leg["kind"] == "sub" else l["cable_owner"]]
+                if not p.tenant or p.tenant.slug != want_owner:
+                    bad.append(f"{key} leg {n} owner")
+                if leg["kind"] != "sub":
+                    cond = nb.plugins.pathways.conduits.get(label=leg["label"] + (" conduit A1" if leg["kind"] == "bank" else " conduit"))
+                    if not cond or not cond.tenant or cond.tenant.slug != tenant_slug[leg["owner"]]:
+                        bad.append(f"{key} leg {n} conduit owner")
+                want_type = "submarine" if leg["kind"] == "sub" else "innerduct"
+                if str(p.pathway_type.value if hasattr(p.pathway_type, "value") else p.pathway_type) != want_type:
+                    bad.append(f"{key} leg {n} type {p.pathway_type}")
+            if abs(total - float(cable.length) * 1000) > 100:
+                bad.append(f"{key}: ducts {total:.0f} m, cable {float(cable.length) * 1000:.0f} m")
+            a_site, b_site = (next(naming.site_slug(s) for s in SITES if s["code"] == c) for c in (l["a"], l["b"]))
+            if (structs[legs_[0]["a"]].site.slug, structs[legs_[-1]["b"]].site.slug) != (a_site, b_site):
+                bad.append(f"{key}: ends are not the entrances of {l['a']} and {l['b']}")
+        check("each ring cable runs through its legs in order, structure to structure, owner by owner, and the ducts add up to its length",
+              not bad, str(bad))
+        check("no duct and no structure outside the buildings is shared between two ring links (dispersed routing)",
+              all(len(v) == 1 for v in used_paths.values()) and all(len(v) == 1 for v in used_structs.values()),
+              str({k: v for k, v in list(used_paths.items()) + list(used_structs.items()) if len(v) > 1}))
+        lease = next(l for l in M.LINKS if l["circuit"])
+        lease_cable = cabled(("rearport", lease["a_panel"], "Trunk"), ("rearport", lease["b_panel"], "Trunk"))
+        check("the West - East cable is owned by Stockholm Metro Fibre and leased whole (SMF-DF-0001, with a geometry)",
+              lease_cable.tenant.slug == "stockholm-metro-fibre-ab" and bool(nb.circuits.circuits.get(cid=lease["circuit"]))
+              and bool(nb.plugins.pathways.circuit_geometries.get(circuit_id=nb.circuits.circuits.get(cid=lease["circuit"]).id)))
+    else:
+        skip_checks("pathways", "the Stockholm metro plant")
+    if have("fms"):
+        tube_names = []
+        for key in (l["key"] for l in M.LINKS):
+            l = M.link(key)
+            fcab = next((fc for fc in nb.plugins.fms.fiber_cables.all() if fc.cable.label ==
+                         cabled(("rearport", l["a_panel"], "Trunk"), ("rearport", l["b_panel"], "Trunk")).label), None)
+            names = sorted(t.name for t in nb.plugins.fms.buffer_tubes.filter(fiber_cable_id=fcab.id)) if fcab else []
+            tube_names.append(len(names) == 24 and all(n.startswith("Tube ") and " - " in n for n in names))
+        check("each ring cable has 24 tubes named after their use (WDM, Nordfiber dark, leasable dark)", all(tube_names))
+    else:
+        skip_checks("fms", "ring cable tube names")
 
     print("== Services ==")
-    check("iBGP full mesh", nb.plugins.bgp.session.count() == 10, str(nb.plugins.bgp.session.count()))
-    check("one secret per router 01", nb.plugins.secrets.secrets.count() == 5)
+    routers = len(S.ROUTER_ORDER)
+    if have("bgp"):
+        check("iBGP full mesh", nb.plugins.bgp.session.count() == routers * (routers - 1) // 2, str(nb.plugins.bgp.session.count()))
+    else:
+        skip_checks("bgp", "iBGP full mesh")
+    if have("secrets"):
+        check("one secret per router 01", nb.plugins.secrets.secrets.count() == routers)
+    else:
+        skip_checks("secrets", "one secret per router 01")
     check("every managed device has a primary IPv4",
           all(devices[d["name"]].primary_ip4 for d in devices_plan if d["mgmt_ip"]))
 
@@ -306,7 +438,8 @@ def run(nb):
                     stale.append(f"{label} {getattr(o, 'name', None) or getattr(o, 'label', None) or getattr(o, 'cid', o.id)}")
     check("no leftover phase/PoP/TODO wording", not stale, str(stale))
 
-    print(f"\n{PASSED} checks passed, {len(FAILS)} failed")
+    extra = f", {len(SKIPPED)} groups of plugin checks skipped" if SKIPPED else ""
+    print(f"\n{PASSED} checks passed, {len(FAILS)} failed{extra}")
     return not FAILS
 
 

@@ -57,7 +57,8 @@ def inventory():
         tr = rack_name(site, "tr", 1)
         rack(site, "tr", 1, "nordfiber", "core")
         for key, pname in names["patch"].items():
-            dev(pname, H.T_PANEL, "patch-panel", site, "tr", tr, H.CORE_SLOTS["patch"][key], "nordfiber")
+            ptype = H.T_PANEL if key == "mmr" else H.panel_type(code, key)
+            dev(pname, ptype, "patch-panel", site, "tr", tr, H.CORE_SLOTS["patch"][key], "nordfiber")
         dev(names["oob"], H.T_COPPER_SWITCH, "oob-switch", site, "tr", tr, H.CORE_SLOTS["oob"], "nordfiber")
         for i, n in enumerate(names["rtr"]):
             dev(n, H.T_ROUTER, "core-router", site, "tr", tr, H.CORE_SLOTS["rtr"][i], "nordfiber",

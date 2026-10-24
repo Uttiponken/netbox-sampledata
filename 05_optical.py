@@ -12,11 +12,14 @@ saved and creates duplicates; layer 7 prunes them. Its /trace/ also cannot
 walk the front-to-front MeetMe jumpers, so the Helsinki links are not
 traceable by the plugin — verify.py checks them by walking the cables.
 
+The cabling is core NetBox and always loaded; the WDM line ports, wavelength services and channel status
+need netbox-wdm and are skipped without it.
+
 Requires layers 1-4. Safe to re-run.
 """
 
 from cabling import F, I, R, Cabler
-from common import api, connect, ensure, report
+from common import api, connect, ensure, have, report, skip
 from data import optical as O
 from data.organization import TENANTS
 
@@ -50,7 +53,7 @@ def cabling(nb, cabler):
         cabler.connect(F(wdm, ch), I(rtr, iface), note=f"{wdm} channel {ch} to router (backbone link)")
     print("== Regeneration jumper ==")
     a, ach, b, bch = O.REGEN_JUMPER
-    cabler.connect(F(a, ach), F(b, bch), note="regeneration: Stockholm-facing to Malmö-facing muxponder")
+    cabler.connect(F(a, ach), F(b, bch), note="regeneration: Stockholm-facing (north route) to Malmö-facing muxponder")
 
 
 def wdm_circuits(nb):
@@ -99,12 +102,19 @@ def activate_channels(nb):
 
 
 def run(nb):
-    line_ports(nb)
+    wdm = have("wdm")
+    if wdm:
+        line_ports(nb)
+    else:
+        skip("wdm", "WDM line ports")
     cabler = Cabler(nb)
     cabling(nb, cabler)
     cabler.summary()
-    wdm_circuits(nb)
-    activate_channels(nb)
+    if wdm:
+        wdm_circuits(nb)
+        activate_channels(nb)
+    else:
+        skip("wdm", "wavelength services (WDM circuits) and channel status")
 
 
 if __name__ == "__main__":

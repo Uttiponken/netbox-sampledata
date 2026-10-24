@@ -37,9 +37,10 @@ if not NETBOX_TOKEN:
 def connect():
     nb = pynetbox.api(NETBOX_URL, token=NETBOX_TOKEN)
     try:
-        nb.status()
+        status = nb.status()
     except pynetbox.RequestError as e:
         sys.exit(f"Could not reach or authenticate to {NETBOX_URL}: {e}")
+    detect_plugins(status)
     return nb
 
 
@@ -54,6 +55,71 @@ def api(path, method="get", json=None, extra_headers=None):
     resp = requests.request(method, f"{NETBOX_URL}{path}", headers=headers, json=json, timeout=60)
     resp.raise_for_status()
     return resp.json() if resp.content else None
+
+
+# ---------------------------------------------------------------------------
+# Optional plugins
+# ---------------------------------------------------------------------------
+#
+# The dataset loads into a vanilla NetBox. The six plugins below add layers on top of the core data (cables,
+# circuits, devices, addresses are always loaded); each plugin step asks have() first and says [skipped] when
+# the plugin is missing. NETBOX_SKIP_PLUGINS=wdm,pathways switches plugins off on purpose, to test a subset.
+
+PLUGINS = {          # name -> (python module as NetBox reports it, what the dataset uses it for)
+    "pathways": ("netbox_pathways", "structures, ducts, water crossings, cable routes and circuit geometries"),
+    "fms": ("netbox_fms", "fiber cable records, tubes, strands and fiber circuits"),
+    "wdm": ("netbox_wdm", "WDM nodes, channels and wavelength services"),
+    "bgp": ("netbox_bgp", "the BGP peer group and the iBGP sessions"),
+    "secrets": ("netbox_secrets", "encrypted device logins"),
+    "inventory": ("netbox_inventory", "spare-asset records"),
+}
+
+PLUGIN_STATE = {}    # name -> "ok", or the reason it is not used ("is not installed", ...)
+PLUGIN_VERSION = {}
+
+
+def detect_plugins(status):
+    """Decide per plugin whether it can be used: installed, not switched off, and its REST API answers."""
+    off = {n.strip() for n in os.environ.get("NETBOX_SKIP_PLUGINS", "").split(",") if n.strip()}
+    unknown = off - set(PLUGINS)
+    if unknown:
+        sys.exit(f"NETBOX_SKIP_PLUGINS names unknown plugins {sorted(unknown)}; known: {', '.join(PLUGINS)}")
+    installed = status.get("plugins") or {}
+    for name, (module, _what) in PLUGINS.items():
+        PLUGIN_VERSION[name] = installed.get(module)
+        if name in off:
+            PLUGIN_STATE[name] = "is switched off by NETBOX_SKIP_PLUGINS"
+        elif module not in installed:
+            PLUGIN_STATE[name] = "is not installed"
+        else:
+            try:
+                api(f"/api/plugins/{name}/")
+                PLUGIN_STATE[name] = "ok"
+            except requests.HTTPError as e:
+                PLUGIN_STATE[name] = f"is installed but its REST API answers HTTP {e.response.status_code}"
+
+
+def have(name):
+    """True if the plugin is installed, not switched off, and usable through the REST API."""
+    if not PLUGIN_STATE:
+        raise RuntimeError("have() before connect(): plugins are detected when connecting")
+    return PLUGIN_STATE[name] == "ok"
+
+
+def skip(name, what):
+    """Say that a plugin step was left out, and why. The line is counted by build.py's summary."""
+    print(f"  [skipped] {what}: netbox-{name} {PLUGIN_STATE[name]}")
+
+
+def plugin_report():
+    """Lines for the start of a build: which plugins will be used, which are missing and what they would add."""
+    lines = []
+    for name, (_module, what) in PLUGINS.items():
+        if PLUGIN_STATE[name] == "ok":
+            lines.append(f"  used     netbox-{name} {PLUGIN_VERSION[name]}")
+        else:
+            lines.append(f"  missing  netbox-{name} {PLUGIN_STATE[name]}; would add {what}")
+    return lines
 
 
 # ---------------------------------------------------------------------------
