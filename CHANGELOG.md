@@ -2,6 +2,16 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
+## 0.6.1
+
+Documentation only; the data is unchanged (`verify.py` 70 checks, a second `build.py` changes nothing).
+
+- `docs/INFRASTRUCTURE.md` now explains why the metro ring's submarine crossings and innerducts do not appear on the
+  netbox-pathways map: the map has no layer for these base pathways, its search box skips them, and the **Map**
+  button on their pages opens the map on the extent of the whole dataset instead of the stretch. The data and the
+  plugin's `geo/pathways` API are complete. 45 of the ring's 52 cable segments lie in innerducts or submarine
+  crossings.
+
 ## 0.6.0
 
 Two changes: Stockholm becomes three availability zones with a metro ring through municipal ducts, and the plugins

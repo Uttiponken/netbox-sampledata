@@ -203,8 +203,15 @@ The netbox-pathways map does not draw submarine pathways, so the water crossings
 complete (each crossing has its geometry, and the plugin's `geo/pathways` API returns it): the map only has layers
 for conduit banks, conduits, aerial spans, direct-buried pathways and circuits, its search box asks only those, and
 the **Map** button on a crossing's page (`?select=submarine-<id>`) finds nothing to centre on, so the map falls back
-to its default view. The innerducts, which are base pathways too, are not drawn either; the conduits that carry
-them are.
+to its default view (the extent of the whole dataset, not the crossing).
+
+The 42 innerducts have the same limitation, because they are base pathways too. They are not drawn, the search box
+skips them, and the **Map** button on an innerduct's page (`?select=innerduct-<id>`) also opens the map on the whole
+dataset instead of the stretch. Each innerduct has exactly the line of its parent conduit, so the route is visible
+through the conduit, but the innerduct itself (its owner, its colour, the cable inside it) cannot be selected on the
+map. This matters for the metro ring: of its 52 cable segments, 42 lie in innerducts and 3 in submarine crossings,
+and only the 7 direct-buried ones are on a pathway type the map draws. The data is as netbox-pathways models it
+(a cable segment on an innerduct inside a conduit); nothing is missing from the dataset.
 
 ## 5. DWDM transport
 
