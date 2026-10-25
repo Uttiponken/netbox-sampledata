@@ -13,9 +13,22 @@ innermost pathway of every leg, in order. Safe to re-run.
     python plant.py
 """
 
-from common import connect, ensure, have, report, skip
+from common import connect, ensure, have, report, skip, version_at_least
 from data import metro as M
 from data.organization import TENANTS
+
+
+
+# netbox-pathways 0.3.0 moved a structure's map point from `location` to `geometry` (`location` became a link to a
+# NetBox Location) and made an innerduct's colour a hex code (the migration turned "orange" into ff9800). Both are
+# decided when the plugin has been detected (connect()), not when this module is imported.
+def _point_field():
+    return "geometry" if version_at_least("pathways", 0, 3) else "location"
+
+
+def _innerduct_color():
+    color = M.INNERDUCT["color"]
+    return {"orange": "ff9800"}.get(color, color) if version_at_least("pathways", 0, 3) else color
 
 
 def point(lon, lat):
@@ -39,14 +52,16 @@ def structures(nb, tenants, sites):
     print("== Structures ==")
     made = {}
     entrance_sites = {name: code for code, links in M.ENTRANCES.items() for name in links.values()}
+    field = _point_field()
     for name, (stype, lon, lat, owner, _link) in M.structures().items():
         site = sites[entrance_sites[name]] if name in entrance_sites else None
-        obj, st = ensure(nb.plugins.pathways.structures, {"name": name}, once=("location",),
-                         name=name, structure_type=stype, status="active", location=point(lon, lat),
+        obj, st = ensure(nb.plugins.pathways.structures, {"name": name}, once=(field,),
+                         name=name, structure_type=stype, status="active", **{field: point(lon, lat)},
                          tenant=tenants[owner].id, site=site.id if site else None)
-        # the API returns the location as GeoJSON, so it is compared apart (and a moved structure is moved)
-        if obj.location is None or [round(c, 5) for c in obj.location.coordinates] != [round(lon, 5), round(lat, 5)]:
-            obj.update({"location": point(lon, lat)})
+        # the API returns the point as GeoJSON, so it is compared apart (and a moved structure is moved)
+        current = getattr(obj, field)
+        if current is None or [round(c, 5) for c in current.coordinates] != [round(lon, 5), round(lat, 5)]:
+            obj.update({field: point(lon, lat)})
             st = "updated"
         report("structure", obj, st, f"{stype}, {M.short(owner)}")
         made[name] = obj
@@ -103,7 +118,7 @@ def legs(nb, tenants, made):
             # endpoint has no tenant field, so the owner is set on the base pathway.
             inner_fields = {k: v for k, v in common.items() if k != "tenant"}
             inner, st = _pathway(nb.plugins.pathways.innerducts, f"{base} innerduct", path,
-                                 {"parent_conduit": parent.id, "size": M.INNERDUCT["size"], "color": M.INNERDUCT["color"],
+                                 {"parent_conduit": parent.id, "size": M.INNERDUCT["size"], "color": _innerduct_color(),
                                   "position": M.INNERDUCT["position"]},
                                  comments=f"Innerduct that carries the metro cable, {who}.", **inner_fields)
             as_pathway = nb.plugins.pathways.pathways.get(inner.id)

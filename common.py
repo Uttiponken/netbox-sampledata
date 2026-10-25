@@ -14,6 +14,7 @@ module instead of calling pynetbox directly, so two rules hold everywhere:
 
 import math
 import os
+import re
 import sys
 import urllib.request
 
@@ -104,6 +105,12 @@ def have(name):
     if not PLUGIN_STATE:
         raise RuntimeError("have() before connect(): plugins are detected when connecting")
     return PLUGIN_STATE[name] == "ok"
+
+
+def version_at_least(name, *wanted):
+    """True if the installed plugin is at least this version, e.g. version_at_least("pathways", 0, 3)."""
+    found = tuple(int(part) for part in re.findall(r"\d+", PLUGIN_VERSION.get(name) or "")[:3])
+    return found >= wanted
 
 
 def skip(name, what):

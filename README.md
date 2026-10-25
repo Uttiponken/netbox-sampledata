@@ -34,6 +34,12 @@ built the way it is, and the history of how it got here.
 | netbox-secrets | One encrypted login per router | No logins |
 | netbox-inventory | The cold-spares depot | No spare assets |
 
+The dataset follows the plugin releases it meets. It was built from an empty NetBox and verified (a second run
+changes nothing) on NetBox 4.6.10 with netbox-fms 0.4.1 and netbox-pathways 0.2.2 (70 checks), and on NetBox 4.7.3
+with netbox-fms 0.6.0 and netbox-pathways 0.3.0 (69 checks), which store fiber circuit paths and structure points
+differently; the loader asks the installed version (`version_at_least()` in `common.py`). netbox-secrets has no
+release for NetBox 4.7 yet, so there the logins and their check are skipped.
+
 `build.py` lists the plugins it found at the start, prints `[skipped]` for every step it left out, and sums them up at
 the end; `verify.py` skips the matching groups of checks and counts them. On a vanilla NetBox the core checks
 (39 of the 70) pass. `NETBOX_SKIP_PLUGINS=wdm,pathways` switches plugins off on purpose, to see what a subset gives.
@@ -161,7 +167,7 @@ what is left. The remaining differences are all deliberate (see
 
 ## Releases
 
-Tagged `v0.1.0` to `v0.6.1`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
+Tagged `v0.1.0` to `v0.7.0`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
 passes `verify.py`.
 
 ## Optional: acceptance tests of netbox-tracepath-plugin
@@ -184,8 +190,8 @@ The PDFs go to `/tmp/tp-out` in the container. Set `NETBOX_COMPOSE` to use anoth
 
 Wireless links (no radio equipment in the scenario), customer CPE routers,
 a second wavelength customer at Oslo, a DCP-110 shelf in front of the
-Helsinki backbone wavelengths, a topology diagram plugin (none targets NetBox
-4.6 yet), power, and anything above management addressing and iBGP.
+Helsinki backbone wavelengths, a topology diagram plugin, power, and anything above management addressing and
+iBGP.
 
 ## Authors
 

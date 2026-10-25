@@ -2,6 +2,22 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
+## 0.7.0
+
+Loads into NetBox 4.7.3 with the newest plugins as well; the data is unchanged and NetBox 4.6 with the older plugin
+releases keeps working. Built from an empty NetBox on 4.7.3 (netbox-fms 0.6.0, netbox-pathways 0.3.0): `verify.py`
+passes (69 of 70 checks, the netbox-secrets one is skipped), a second `build.py` changes nothing, and the print
+plugin's acceptance tests pass.
+
+- **netbox-fms 0.6.** Fiber circuits are assigned the path FMS derives between their two panel ports (one path per
+  circuit, with the wavelength and loss on the assignment) instead of two traced paths. The build waits for the
+  derived path to appear and for FMS to finish its analysis, and tries the assignment again if the API refuses it
+  meanwhile. `verify.py` checks the circuit's ends and that the path is complete either way.
+- **netbox-pathways 0.3.** A structure's point is written to `geometry` (it was `location`, now a link to a NetBox
+  Location) and the innerduct colour is a hex code.
+- `common.version_at_least()` decides this from the installed plugin version.
+- netbox-secrets has no NetBox 4.7 release yet; the logins are skipped there, as with any missing plugin.
+
 ## 0.6.1
 
 Documentation only; the data is unchanged (`verify.py` 70 checks, a second `build.py` changes nothing).

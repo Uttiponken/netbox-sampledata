@@ -24,9 +24,13 @@ backbone, so a trace follows the glass rather than the contract.
 Requires layers 1-3. Safe to re-run.
 """
 
+import time
+
+import requests
+
 import plant
 from cabling import CT, Cabler
-from common import api, connect, ensure, have, linestring, report, route_km, skip
+from common import api, connect, ensure, have, linestring, report, route_km, skip, version_at_least
 from data import metro as M
 from data import transport as T
 from data.organization import SITES, TENANTS
@@ -189,21 +193,29 @@ def strand_ports(nb, plant_):
 
 
 def fiber_circuits(nb, plant_):
-    """One netbox-fms fiber circuit per trunk pair in use or leased, two paths (the duplex pair's two strands), traced."""
+    """One netbox-fms fiber circuit per trunk pair in use or leased, between the two panel ports of the pair.
+
+    netbox-fms 0.6 derives the fiber paths itself from the strands landed on the ports, so the circuit is assigned
+    the path between its end ports. Earlier releases stored two traced paths (the duplex pair's two strands)."""
     print("== FMS fiber circuits ==")
     if not have("fms"):
         skip("fms", "fiber circuits")
         return
     tenants = {t["code"]: nb.tenancy.tenants.get(slug=t["slug"]) for t in TENANTS}
+    derived = version_at_least("fms", 0, 6)
     for fc in T.FIBER_CIRCUITS:
         info = plant_[fc["trunk"]]
-        (origin_dev, origin_port), _far = T.circuit_ends(fc)
+        (origin_dev, origin_port), far = T.circuit_ends(fc)
         origin = nb.dcim.front_ports.get(device=origin_dev, name=f"Port {origin_port}")
         tenant = tenants[fc.get("tenant", "nordfiber")]
         circuit, st = ensure(nb.plugins.fms.fiber_circuits, {"cid": fc["cid"]}, name=fc["name"], cid=fc["cid"],
                              status="active", strand_count=2, tenant=tenant.id, description=fc["description"])
         report("fiber circuit", circuit, st, fc["cid"])
         loss = round(info["km"] * T.FIBER_CIRCUIT_LOSS_DB_PER_KM + T.FIBER_CIRCUIT_CONNECTOR_LOSS_DB, 2)
+        if derived:
+            end = nb.dcim.front_ports.get(device=far[0], name=f"Port {far[1]}")
+            _assign_derived_path(nb, circuit, fc, origin, end, loss)
+            continue
         for position in (1, 2):
             path, st = ensure(nb.plugins.fms.fiber_circuit_paths, {"circuit_id": circuit.id, "position": position},
                               once=("path",), circuit=circuit.id, position=position, origin=origin.id,
@@ -213,6 +225,74 @@ def fiber_circuits(nb, plant_):
         api(f"/api/plugins/fms/fiber-circuits/{circuit.id}/retrace/", method="post")
         if not all(p.is_complete for p in nb.plugins.fms.fiber_circuit_paths.filter(circuit_id=circuit.id)):
             raise SystemExit(f"{fc['name']}: FMS did not trace a complete path")
+
+
+def _derived_paths(nb, a, b):
+    """The fiber paths netbox-fms has derived between two front ports, whichever end is listed first."""
+    found = list(nb.plugins.fms.fiber_strand_paths.filter(end_a_port_id=a.id, end_b_port_id=b.id))
+    return found + list(nb.plugins.fms.fiber_strand_paths.filter(end_a_port_id=b.id, end_b_port_id=a.id))
+
+
+def _wait_for_analysis(nb, wait_seconds):
+    """Wait until netbox-fms has worked off its path analysis queue (the plant changes of the strand landings).
+
+    Assigning a path while the analysis is still replacing paths failed once on an empty NetBox (HTTP 500)."""
+    deadline, quiet = time.time() + wait_seconds, 0
+    while time.time() < deadline:
+        quiet = quiet + 1 if nb.plugins.fms.path_analysis_queue.count() == 0 else 0
+        if quiet >= 2:
+            return
+        time.sleep(3)
+
+
+def _assign_derived_path(nb, circuit, fc, a, b, loss, wait_seconds=180):
+    """Assign the derived path between ports a and b to the circuit (netbox-fms 0.6), with its optical figures.
+
+    The analysis runs as a background job after strands are landed, so the path can appear some seconds later."""
+    _wait_for_analysis(nb, wait_seconds)
+    deadline = time.time() + wait_seconds
+    state = "exists"
+    for attempt in range(1, 6):
+        paths = _derived_paths(nb, a, b)
+        while not any(p.completeness == "terminated_terminated" for p in paths) and time.time() < deadline:
+            time.sleep(3)
+            paths = _derived_paths(nb, a, b)
+        complete = [p for p in paths if p.completeness == "terminated_terminated"]
+        if not complete:
+            raise SystemExit(f"{fc['name']}: netbox-fms has derived no complete fiber path from {a.device.name} {a.name} "
+                             f"to {b.device.name} {b.name} after {wait_seconds} s (is the NetBox worker running?)")
+        wanted = {complete[0].id}
+        assigned = list(nb.plugins.fms.fiber_circuit_paths.filter(circuit_id=circuit.id))
+        for stale in [x for x in assigned if x.strand_path.id not in wanted]:
+            stale.delete()
+            assigned.remove(stale)
+        if assigned:
+            break
+        try:
+            api(f"/api/plugins/fms/fiber-circuits/{circuit.id}/assign/", method="post",
+                json={"strand_paths": sorted(wanted)})
+        except requests.HTTPError as e:
+            # the paths can still be replaced by a running analysis: look again after a pause
+            print(f"  [retry  ] assign for {fc['cid']} answered HTTP {e.response.status_code} (attempt {attempt}): "
+                  f"{e.response.text[:200]!r}")
+            if attempt == 5:
+                raise
+            time.sleep(10)
+            _wait_for_analysis(nb, wait_seconds)
+            continue
+        assigned = list(nb.plugins.fms.fiber_circuit_paths.filter(circuit_id=circuit.id))
+        state = "created"
+        break
+    for x in assigned:
+        change = {}
+        if x.wavelength_nm != T.FIBER_CIRCUIT_WAVELENGTH_NM:
+            change["wavelength_nm"] = T.FIBER_CIRCUIT_WAVELENGTH_NM
+        if x.actual_loss_db is None or abs(float(x.actual_loss_db) - loss) > 1e-6:
+            change["actual_loss_db"] = loss
+        if change:
+            x.update(change)
+            state = "updated" if state == "exists" else state
+        report("  path", x, state, f"{a.device.name} : {a.name} -> {b.device.name} : {b.name}, {loss:.2f} dB")
 
 
 def geometries(nb):

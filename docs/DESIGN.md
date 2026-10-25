@@ -97,6 +97,13 @@ here is specific to the print plugin, which just draws the colour NetBox stores.
   leased trunk.
 - **API quirks.** A circuit path cannot be created with an empty `path`, so it is seeded with its origin front
   port and the circuit's `retrace` action fills it in; the API returns origin and destination as plain ids.
+- **netbox-fms 0.6 (NetBox 4.7).** Paths are no longer stored on the circuit: FMS derives a `FiberStrandPath` for
+  every pair of front ports its strands connect (a background job after the strands are landed, so
+  `04_transport.py` waits for it), and a circuit is assigned one of them with `POST fiber-circuits/<id>/assign/`.
+  The assignment carries the wavelength and loss. A circuit therefore has ONE assigned path, the pair's two
+  strands travel together, and `retrace` and the `FiberCircuitNode` are gone; the code keeps the older way for
+  netbox-fms below 0.6 (`version_at_least("fms", 0, 6)` in `common.py`). `verify.py` checks the same facts
+  either way: the circuit's ends, that the path is complete, and that it is the pair the plan names.
 - **Loss and wavelength.** 1550 nm, and the loss of the bare fiber end to end (0.21 dB/km plus 1.5 dB of
   connectors), which comes to 55 to 192 dB. It is not a link budget; amplifiers are not modelled. The constants
   are in `data/transport.py`.

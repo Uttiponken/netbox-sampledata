@@ -18,7 +18,7 @@ import sys
 
 import layout
 import naming
-from common import PLUGIN_STATE, api, connect, have
+from common import PLUGIN_STATE, api, connect, have, version_at_least
 from data import cabling as C
 from data import hardware as H
 from data import metro as M
@@ -242,6 +242,18 @@ def run(nb):
             paths = list(nb.plugins.fms.fiber_circuit_paths.filter(circuit_id=fc.id)) if fc else []
             (o_dev, o_port), (d_dev, d_port) = T.circuit_ends(plan)
             want_ends = (o_dev, f"Port {o_port}", d_dev, f"Port {d_port}")
+            if version_at_least("fms", 0, 6):
+                # netbox-fms 0.6: the circuit is assigned the path it derived between the two panel ports
+                def port(fp):
+                    return fp.device.name, fp.name
+                derived = [nb.plugins.fms.fiber_strand_paths.get(p.strand_path.id) for p in paths]
+                got = {frozenset({port(sp.end_a_port), port(sp.end_b_port)}) for sp in derived}
+                want = {frozenset({(o_dev, f"Port {o_port}"), (d_dev, f"Port {d_port}")})}
+                check(f"{plan['cid']}: 2 strands, assigned path complete {want_ends[0]}:{want_ends[1]} -> {want_ends[2]}:{want_ends[3]}",
+                      bool(fc) and fc.strand_count == 2 and len(paths) == 1
+                      and all(sp.completeness == "terminated_terminated" for sp in derived)
+                      and got == want, f"{got}")
+                continue
             def port(pk):                                # the FMS serializer returns plain ids for these
                 fp = nb.dcim.front_ports.get(pk)
                 return fp.device.name, fp.name
