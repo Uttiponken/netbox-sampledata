@@ -10,7 +10,9 @@ reproduced and checked, and so nobody has to believe hand-typed coordinates.
   2. The route is sampled every ~700 m and each sample is placed in its municipality (Overpass API, read-only).
   3. The route is cut into legs where the municipality changes, and any run longer than ~4.5 km is split again.
      The first and last leg at a datacenter are the duct-bank lead-ins.
-  4. Water crossings are straight lines between two shore chambers and become submarine pathways.
+  4. Water crossings become submarine pathways. A crossing between two shore chambers is a straight line; a ("water", ...)
+     crossing is routed through the water along the OpenStreetMap shoreline (tools/waterpath.py), so it never cuts a peninsula.
+  5. If the Overpass API does not answer, the municipality of a sample is looked up with Nominatim instead (one request per second).
 
 The output is geometry only: the ownership and the ducts themselves are invented for the scenario. The road and
 boundary data come from OpenStreetMap contributors (ODbL, https://www.openstreetmap.org/copyright).
@@ -21,9 +23,12 @@ boundary data come from OpenStreetMap contributors (ODbL, https://www.openstreet
 import io
 import json
 import math
+import os
 import subprocess
 import sys
 import time
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))      # waterpath.py, also under python -I
 
 UA = "netbox-sampledata-geocheck/1.0 (educational dataset)"
 OSRM = "https://router.project-osrm.org"
@@ -47,6 +52,11 @@ LINKS = {
     "nw": [("entrance", "STN-ENT-W"),
            ("shore", 17.8330, 59.3600),          # Hässelby strand
            ("shore", 17.7600, 59.3520),          # Färingsö: across Mälaren (by road it is 26 km away)
+           ("via", 17.8159, 59.28777),           # Ekerö centre (NW-09-EKE): the old route went on east to the E4/E20,
+                                                 # the new one turns west along the south coast of Ekerö
+           # Sjöängen (Ekerö) to Vattubrinken (Södertälje): through the open bay of Mälaren, 6 times shorter than the
+           # 39 km by road, and a land run to the datacenter that stays away from the E4/E20 (Viksäter does not).
+           ("water", (17.65386, 59.29428), (17.58285, 59.24386), (59.20, 17.50, 59.33, 17.75)),
            ("entrance", "STW-ENT-N")],
     "ne": [("entrance", "STN-ENT-E"),
            ("shore", 18.1000, 59.4020),          # Djursholm, Danderyd
@@ -76,16 +86,37 @@ def osrm(path):
     raise SystemExit(f"OSRM failed: {path}")
 
 
-def municipality(lon, lat):
-    q = f"[out:json][timeout:25];is_in({lat},{lon})->.a;area.a[boundary=administrative][admin_level=7];out tags;"
-    for t in range(6):
+_overpass_down = [False]
+
+
+def municipality_nominatim(lon, lat):
+    """The kommun of a point from Nominatim (zoom 10 returns the municipality, or the town with its municipality)."""
+    url = (f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&addressdetails=1&accept-language=sv"
+           f"&lat={lat}&lon={lon}")
+    for t in range(4):
         try:
-            d = json.loads(run_curl([OVERPASS, "-H", "Accept: */*", "--data-urlencode", "data=" + q]).stdout.decode("utf-8"))
-            names = [e["tags"].get("name") for e in d["elements"] if e["tags"].get("name")]
-            return names[0] if names else None
+            d = json.loads(run_curl([url]).stdout.decode("utf-8"))
+            time.sleep(1.2)
+            name = d.get("address", {}).get("municipality") or (d.get("name") if str(d.get("name", "")).endswith(" kommun") else None)
+            return name
         except Exception:
-            time.sleep(5 * (t + 1))
+            time.sleep(3 * (t + 1))
     return None
+
+
+def municipality(lon, lat):
+    if not _overpass_down[0]:
+        q = f"[out:json][timeout:25];is_in({lat},{lon})->.a;area.a[boundary=administrative][admin_level=7];out tags;"
+        for t in range(2):
+            try:
+                d = json.loads(run_curl([OVERPASS, "-H", "Accept: */*", "--data-urlencode", "data=" + q]).stdout.decode("utf-8"))
+                names = [e["tags"].get("name") for e in d["elements"] if e["tags"].get("name")]
+                return names[0] if names else None
+            except Exception:
+                time.sleep(5 * (t + 1))
+        _overpass_down[0] = True
+        print("   Overpass does not answer: municipalities come from Nominatim from here on")
+    return municipality_nominatim(lon, lat)
 
 
 def km(a, b):
@@ -185,6 +216,21 @@ def sections(key):
             first = False
         elif c[0] == "via":
             current.append((c[1], c[2]))
+        elif c[0] == "water":
+            _kind, hint_a, hint_b, bbox = c
+            import waterpath
+            cache = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".cache", f"shore-{key}.json")
+            os.makedirs(os.path.dirname(cache), exist_ok=True)
+            water = waterpath.Water(waterpath.shoreline(bbox, cache), hint_a, bbox)      # the hint on the dry side is a village
+            route_pts = water.route(hint_a, hint_b)
+            rs, ds = snap(*route_pts[0])
+            rg, dg = snap(*route_pts[-1])
+            print(f"   {key} water route {sum(km(p, q) for p, q in zip(route_pts, route_pts[1:])):.1f} km through "
+                  f"{len(route_pts)} points; chambers {rs} ({ds:.0f} m from the water) and {rg} ({dg:.0f} m)")
+            current.append(rs)
+            out.append(("land", current))
+            out.append(("sub", rs, rg, list(route_pts)))
+            current = [rg]
         elif c[0] == "shore":
             p, dist = snap(c[1], c[2])
             print(f"   {key} shore ({c[1]},{c[2]}) -> {p}  ({dist:.0f} m to the road)")
@@ -220,7 +266,7 @@ def segment(key, secs):
             stations[-1][1] = "manhole" if stations[-1][1] != "building_entrance" else stations[-1][1]
             stations[-1][4] = "nordfiber"
             add_station(f"{key.upper()}-{n:02d}-SUB", "manhole", b, "nordfiber")
-            legs.append(["sub", "nordfiber", []])
+            legs.append(["sub", "nordfiber", [(round(x, 5), round(y, 5)) for x, y in (sec[3] if len(sec) > 3 else [])]])
             continue
         waypoints = sec[1]
         pts, refs = route(waypoints)

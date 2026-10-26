@@ -142,6 +142,37 @@ def cable_route(nb, key):
     return out
 
 
+def retire(nb):
+    """Remove what the plan no longer contains: structures, ducts and crossings that an earlier version of a ring route left behind.
+
+    Called after the cables have been routed through the current legs, so no cable segment still points at them. Only objects
+    whose name or label carries a ring link's prefix (NW-, NE-, WE-) are considered."""
+    prefixes = tuple(f"{l['key'].upper()}-" for l in M.LINKS)
+    labels = set()
+    for l in M.LINKS:
+        for leg in M.legs(l["key"]):
+            base = leg["label"]
+            labels |= {f"{base} submarine crossing", f"{base} duct bank", f"{base} conduit {M.BANK['conduit_position']}",
+                       f"{base} conduit", f"{base} innerduct"}
+    stale = [p for p in nb.plugins.pathways.pathways.all() if p.label.startswith(prefixes) and p.label not in labels]
+    endpoints = {"innerduct": nb.plugins.pathways.innerducts, "conduit": nb.plugins.pathways.conduits,
+                 "conduit_bank": nb.plugins.pathways.conduit_banks}
+    for kind in ("innerduct", "conduit", "conduit_bank", "submarine"):
+        for p in stale:
+            ptype = str(p.pathway_type.value if hasattr(p.pathway_type, "value") else p.pathway_type)
+            if ptype != kind:
+                continue
+            print(f"  [removed] pathway: {p.label} — {kind}, no longer on the ring")
+            for seg in nb.plugins.pathways.cable_segments.filter(pathway_id=p.id):
+                seg.delete()
+            (endpoints.get(kind) or nb.plugins.pathways.pathways).get(p.id).delete()
+    wanted = set(M.structures())
+    for st in nb.plugins.pathways.structures.all():
+        if st.name.startswith(prefixes) and st.name not in wanted:
+            print(f"  [removed] structure: {st.name} — no longer on the ring")
+            st.delete()
+
+
 def run(nb):
     tenants = _tenants(nb)
     sites = {}

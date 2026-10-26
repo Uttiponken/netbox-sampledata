@@ -2,6 +2,34 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
+## 0.8.0
+
+Two routes changed; the rest of the dataset is as in 0.7.0. Built from an empty NetBox on 4.7.3 (netbox-fms 0.6.0, netbox-pathways 0.3.0; netbox-secrets has no 4.7 release, so its login step is skipped): `verify.py` passes (70 checks), a second `build.py` changes nothing, an existing 0.7.0 database is brought up to date in place the same way (13 objects removed, the rest reconciled), and the print plugin's acceptance tests pass (199 checks). Not rebuilt on NetBox 4.6.
+
+- **The Stockholm North - West ring cable no longer runs alongside the West - East cable.** `bb-cbl-00008` used to
+  leave Ekerö for the E4/E20 and share that corridor with `bb-cbl-00010` for its last 16.8 km (different ducts, same
+  road). It now follows Ekerö's south coast to Sjöängen, crosses the open water of Mälaren (7.5 km, a submarine
+  pathway routed along the shore, 6 times shorter than the 39 km detour by road) and lands at Vattubrinken, from where
+  local roads lead into the Södertälje entrance from the north-west. 57.2 km (was 50.5), owners Sollentuna,
+  Stockholm, Ekerö and Södertälje (Botkyrka and Salem no longer own ducts on this cable). The ring now has 41
+  conduits with innerducts and 4 submarine pathways (was 42 and 3).
+- **The Stockholm North - Helsinki route (`bb-cbl-00005`, `NSN-DF-0001`) no longer goes over Vaasa.** It runs up road
+  265 and the E18 to Norrtälje, over Väddö to Grisslehamn, by sea to Eckerö, over Åland to Mariehamn and Hummelvik, by
+  sea to Kumlinge and through the open water between the islands to Korpo, then Pargas, Turku, the E18 to Salo, along
+  the power line corridor towards Espoo and by road into Helsinki: 591.7 km in 19 legs (was one straight line of 849
+  km). Each land leg is a direct-buried pathway and each sea crossing a submarine pathway, owned by Nordic Subsea
+  Networks, with one cable segment per leg. The circuit geometry carries the whole route.
+- **Tools.** `tools/derive_longhaul.py` derives the Helsinki route; `tools/waterpath.py` routes a crossing through
+  the water along the OpenStreetMap shoreline (used for Sjöängen - Vattubrinken and Kumlinge - Korpo);
+  `tools/derive_metro.py` can now route a crossing through the water and falls back to Nominatim when the Overpass
+  API does not answer.
+- **`verify.py`.** A new check: no two ring cables run within 300 m of each other for more than 0.5 km outside the
+  2 km datacenter lead-ins (the structure-name check could not see a shared road). The route checks follow the legs of
+  a route laid leg by leg.
+- **Upgrading an existing NetBox.** `plant.retire()` removes the ring structures and pathways that the route no longer
+  contains (after the cables have been routed through the new legs), and `04_transport.py` replaces
+  `bb-cbl-00005-route` with its legs; an earlier build is reconciled in place.
+
 ## 0.7.0
 
 Loads into NetBox 4.7.3 with the newest plugins as well; the data is unchanged and NetBox 4.6 with the older plugin

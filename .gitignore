@@ -3,3 +3,6 @@
 .secrets_userkey.pem
 __pycache__/
 *.pyc
+
+# shoreline cache of tools/derive_*.py (one Overpass query per area)
+tools/.cache/

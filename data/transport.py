@@ -12,6 +12,7 @@ circuit's geometry come from here.
 
 from data import metro as M
 from data import optical as O
+from data.longhaul_geometry import GEOMETRY as LONGHAUL
 
 PROVIDERS = [
     {"name": "Nordfiber AB", "slug": "nordfiber-ab",
@@ -21,7 +22,7 @@ PROVIDERS = [
     {"name": "Västkust Bredband AB", "slug": "vastkust-bredband-ab",
      "description": "Fictional regional Internet transit provider. Supplies Nordfiber's upstream Internet access in Gothenburg."},
     {"name": "Nordic Subsea Networks AB", "slug": "nordic-subsea-networks-ab",
-     "description": "Fictional Nordic subsea/terrestrial fiber vendor. Leases Route 1 (Stockholm, Mariehamn, Vaasa, Helsinki) to Nordfiber."},
+     "description": "Fictional Nordic subsea/terrestrial fiber vendor. Leases Route 1 (Stockholm, Norrtälje, Åland, Turku, Salo, Helsinki) to Nordfiber."},
     {"name": "Baltic Fibre Networks OÜ", "slug": "baltic-fibre-networks-ou",
      "description": "Fictional Baltic fiber vendor. Leases Route 2 (Stockholm, Gotland, Riga, Tallinn, Helsinki) to Nordfiber."},
     {"name": "Stockholm Metro Fibre AB", "slug": "stockholm-metro-fibre-ab",
@@ -51,7 +52,7 @@ CIRCUITS = [
      "geometry": "bb3"},
     {"cid": "NSN-DF-0001", "provider": "nordic-subsea-networks-ab", "type": "dark-fiber", "tenant": "nordfiber",
      "rate": None, "sites": {"A": "stn", "Z": "hel"},
-     "description": "Primary leased dark fiber pair, Stockholm North - Helsinki via Mariehamn (Åland) and Vaasa. The shorter route.",
+     "description": "Primary leased dark fiber pair, Stockholm North - Helsinki via Norrtälje, Grisslehamn, Åland, Korpo, Turku and Salo. The shorter route.",
      "geometry": "nsn"},
     {"cid": "BFN-DF-0001", "provider": "baltic-fibre-networks-ou", "type": "dark-fiber", "tenant": "nordfiber",
      "rate": None, "sites": {"A": "ste", "Z": "hel"},
@@ -79,6 +80,20 @@ _STN = ("Stockholm North (Sollentuna)", 17.9200, 59.4405)
 _STW = ("Stockholm West (Södertälje)", 17.6420, 59.1745)
 _STE = ("Stockholm East (Nacka)", 18.1660, 59.3125)
 
+def _longhaul_route(key):
+    """The whole route of a long-haul cable as (name, lon, lat) points: the legs of data/longhaul_geometry.py joined, with
+    a name at the start and at every joint between two legs (the place names are part of the leg names, 'A - B')."""
+    legs = LONGHAUL[key]["legs"]
+    out = []
+    for n, (_kind, name, points) in enumerate(legs):
+        places = name.split(" (")[0].split(" - ")
+        if n == 0:
+            out.append((places[0], *points[0]))
+        out += [("", *p) for p in points[1:-1]]
+        out.append((places[-1], *points[-1]))
+    return out
+
+
 ROUTES = {
     "bb1": [_STN, ("Västerås", 16.5528, 59.6099), ("Örebro", 15.2066, 59.2741),
             ("Karlstad", 13.5116, 59.3793), ("Trollhättan", 12.2886, 58.2837), ("Gothenburg", 11.9746, 57.7089)],
@@ -92,12 +107,16 @@ ROUTES = {
             ("Malmö", 12.9819, 55.5636)],
     "bb5": [_STW, ("Nyköping", 17.0090, 58.7530), ("Norrköping", 16.1924, 58.5877), ("Linköping", 15.6214, 58.4108),
             ("Jönköping", 14.1618, 57.7826), ("Borås", 12.9401, 57.7210), ("Gothenburg", 11.9746, 57.7089)],
-    "nsn": [_STN, ("Mariehamn (Åland)", 19.9348, 60.0971), ("Vaasa", 21.6165, 63.0951),
-            ("Helsinki", 24.9384, 60.1699)],
+    "nsn": _longhaul_route("nsn"),         # derived from OpenStreetMap, leg by leg (data/longhaul_geometry.py)
     "bfn": [_STE, ("Visby (Gotland)", 18.2948, 57.6348), ("Riga", 24.1052, 56.9496),
             ("Tallinn", 24.7536, 59.4370), ("Helsinki", 24.9384, 60.1699)],
 }
 ROUTES.update(M.ROUTES)      # the metro links' routes (nw, ne, we), for the leased circuit's geometry
+
+# Long-haul routes that are laid leg by leg: land legs are direct buried, water crossings submarine pathways. The other
+# long-haul routes are one straight direct-buried line each. The legs belong to the party that owns the cable.
+ROUTE_LEGS = {"nsn": LONGHAUL["nsn"]["legs"]}
+ROUTE_OWNER = {"nsn": "nsn"}
 
 # Long-haul cables, created in this order: the label bb-cbl-0000N follows it (the metro ring continues the numbering).
 #   (route key, end A, end B, note, FMS note)
@@ -117,7 +136,7 @@ LONG_HAUL = [
      "Nordfiber-owned 24-pair trunk, Gothenburg - Malmö along the west coast via Varberg, Halmstad, Helsingborg",
      "Owned by Nordfiber AB. 24 pairs (48 fibers). Second leg of the NF-BRG-0002 protect path, regenerated in Gothenburg."),
     ("nsn", ("stn-mmr-nsn-01", "Trunk"), ("hel-mmr-nsn-01", "Trunk"),
-     "NSN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm North - Helsinki via Mariehamn and Vaasa",
+     "NSN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm North - Helsinki via Norrtälje, Grisslehamn, Åland, Korpo, Turku and Salo",
      "Leased from Nordic Subsea Networks AB under NSN-DF-0001. 24 pairs (48 fibers)."),
     ("bfn", ("ste-mmr-bfn-01", "Trunk"), ("hel-mmr-bfn-01", "Trunk"),
      "BFN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm East - Helsinki via Gotland, Riga and Tallinn",

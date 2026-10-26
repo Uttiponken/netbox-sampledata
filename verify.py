@@ -326,27 +326,43 @@ def run(nb):
         segs_by_cable = {}
         for seg in nb.plugins.pathways.cable_segments.all():
             segs_by_cable.setdefault(seg.cable.id, []).append(seg)
-        check("every long-haul cable has a pathway segment, the ring cables one per leg",
-              all(len(segs_by_cable.get(c.id, [])) == (len(M.legs(ring_key[c.label])) if c.label in ring_key else 1)
-                  for c in long_haul))
+        # the long-haul cables are numbered bb-cbl-00001 ... in the order of T.LONG_HAUL; a route laid leg by leg has a segment per leg
+        lh_key = {f"bb-cbl-{n:05d}": row[0] for n, row in enumerate(T.LONG_HAUL, start=1)}
+
+        def want_segments(c):
+            if c.label in ring_key:
+                return len(M.legs(ring_key[c.label]))
+            return len(T.ROUTE_LEGS.get(lh_key.get(c.label), [None]))
+
+        check("every long-haul cable has a pathway segment, the ring cables and the leg-by-leg routes one per leg",
+              all(len(segs_by_cable.get(c.id, [])) == want_segments(c) for c in long_haul),
+              str({c.label: (len(segs_by_cable.get(c.id, [])), want_segments(c)) for c in long_haul
+                   if len(segs_by_cable.get(c.id, [])) != want_segments(c)}))
         site_pos = {s.slug: (float(s.longitude), float(s.latitude)) for s in nb.dcim.sites.all() if s.latitude}
-        seg_by_cable = {cid: segs[0] for cid, segs in segs_by_cable.items()}
+        base_paths = nb.plugins.pathways.pathways
         off = []
         for c in long_haul:
-            seg = seg_by_cable.get(c.id)
-            if not seg or c.label in ring_labels:
+            if c.label in ring_labels:
                 continue
-            coords = nb.plugins.pathways.direct_buried.get(id=seg.pathway.id).path.coordinates
+            segs = sorted(segs_by_cable.get(c.id, []), key=lambda x: x.sequence)
+            if not segs:
+                off.append(c.label)
+                continue
+            legs_coords = [base_paths.get(id=sg.pathway.id).path.coordinates for sg in segs]
+            coords = [pt for leg in legs_coords for pt in leg]
             ends_sites = [site_pos[t.object.device.site.slug] for t in list(c.a_terminations) + list(c.b_terminations)]
-            pairs = [(coords[0], ends_sites[0], coords[-1], ends_sites[1]), (coords[0], ends_sites[1], coords[-1], ends_sites[0])]
+            first, last = legs_coords[0][0], legs_coords[-1][-1]
+            pairs = [(first, ends_sites[0], last, ends_sites[1]), (first, ends_sites[1], last, ends_sites[0])]
             ok = any(haversine_km(*p[0], *p[1]) < 15 and haversine_km(*p[2], *p[3]) < 15 for p in pairs)
             if not ok:
                 off.append(c.label)
-            km = c.length
-            route_len = sum(haversine_km(*coords[i], *coords[i + 1]) for i in range(len(coords) - 1))
-            if abs(float(km) - route_len) > 1:
+            # consecutive legs meet end to start (within a metre or two)
+            if any(haversine_km(*a[-1], *b[0]) > 0.003 for a, b in zip(legs_coords, legs_coords[1:])):
+                off.append(f"{c.label} legs do not join")
+            route_len = sum(haversine_km(*leg[i], *leg[i + 1]) for leg in legs_coords for i in range(len(leg) - 1))
+            if abs(float(c.length) - route_len) > 1:
                 off.append(f"{c.label} length")
-        check("route geometry starts and ends at the cable's own sites, length matches", not off, str(off))
+        check("route geometry starts and ends at the cable's own sites, its legs join, and the length matches", not off, str(off))
         geoms = nb.plugins.pathways.circuit_geometries.count()
         check("leased circuits have geometries", geoms == sum(1 for c in T.CIRCUITS if "geometry" in c), str(geoms))
     else:
@@ -364,7 +380,7 @@ def run(nb):
         check("each datacenter has one entrance per ring link, on its own site",
               all(structs[n].site and structs[n].site.slug == next(naming.site_slug(s) for s in SITES if s["code"] == c)
                   for n, c in entrance_site.items()))
-        used_structs, used_paths, bad = {}, {}, []
+        used_structs, used_paths, bad, link_pts = {}, {}, [], {}
         base_by_id = {x.id: x for x in pw.pathways.all()}
         for l in M.LINKS:
             key = l["key"]
@@ -378,6 +394,7 @@ def run(nb):
             for n, (seg, leg) in enumerate(zip(segs, legs_), start=1):
                 p = base_by_id[seg.pathway.id]
                 total += float(p.length or 0)
+                link_pts.setdefault(key, []).extend((lon, lat) for lon, lat in p.path.coordinates)
                 used_paths.setdefault(p.id, set()).add(key)
                 for end_ in (p.start_structure, p.end_structure):
                     if end_:
@@ -406,6 +423,27 @@ def run(nb):
         check("no duct and no structure outside the buildings is shared between two ring links (dispersed routing)",
               all(len(v) == 1 for v in used_paths.values()) and all(len(v) == 1 for v in used_structs.values()),
               str({k: v for k, v in list(used_paths.items()) + list(used_structs.items()) if len(v) > 1}))
+        # Dispersed routing by distance: two ring cables may run side by side only where they meet at a datacenter. A trench
+        # shared for kilometres is one backhoe away from taking both down, whatever the structure names say.
+        def dense_pts(pts, step_km=0.1):
+            out = []
+            for a, b in zip(pts, pts[1:]):
+                n = max(1, int(haversine_km(*a, *b) / step_km))
+                out += [(a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n) for i in range(n)]
+            return out + [pts[-1]]
+
+        side_by_side = {}
+        keys = sorted(link_pts)
+        for i, ka in enumerate(keys):
+            for kb in keys[i + 1:]:
+                pa, pb = dense_pts(link_pts[ka]), dense_pts(link_pts[kb])[::3]
+                near = [min(haversine_km(*p, *q) for q in pb) < 0.3 for p in pa]
+                lead = int(2.0 / 0.1)                                   # the first and last 2 km at a datacenter do not count
+                shared = sum(near[lead:len(near) - lead]) * 0.1
+                if shared > 0.5:
+                    side_by_side[f"{ka}/{kb}"] = round(shared, 1)
+        check("no two ring cables run within 300 m of each other for more than 0.5 km outside the datacenter lead-ins",
+              not side_by_side, str(side_by_side))
         lease = next(l for l in M.LINKS if l["circuit"])
         lease_cable = cabled(("rearport", lease["a_panel"], "Trunk"), ("rearport", lease["b_panel"], "Trunk"))
         check("the West - East cable is owned by Stockholm Metro Fibre and leased whole (SMF-DF-0001, with a geometry)",

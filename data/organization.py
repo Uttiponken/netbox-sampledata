@@ -38,7 +38,7 @@ TENANTS = [
     {"code": "vastkust", "name": "Västkust Bredband AB", "slug": "vastkust-bredband-ab", "group": "suppliers",
      "description": "Fictional regional Internet transit provider; supplies Nordfiber's upstream Internet access at Gothenburg."},
     {"code": "nsn", "name": "Nordic Subsea Networks AB", "slug": "nordic-subsea-networks-ab", "group": "suppliers",
-     "description": "Fictional Nordic fiber transit vendor; leases Nordfiber the primary Stockholm-Helsinki dark fiber (via Mariehamn and Vaasa)."},
+     "description": "Fictional Nordic fiber transit vendor; leases Nordfiber the primary Stockholm-Helsinki dark fiber (via Norrtälje, Åland, Turku and Salo)."},
     {"code": "bfn", "name": "Baltic Fibre Networks OÜ", "slug": "baltic-fibre-networks-ou", "group": "suppliers",
      "description": "Fictional Baltic fiber transit vendor; leases Nordfiber the backup Stockholm-Helsinki dark fiber (via Gotland, Riga and Tallinn)."},
     {"code": "smf", "name": "Stockholm Metro Fibre AB", "slug": "stockholm-metro-fibre-ab", "group": "suppliers",

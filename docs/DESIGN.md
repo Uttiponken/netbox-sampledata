@@ -199,6 +199,55 @@ the WDM profile) stopped a build on a NetBox without netbox-wdm. The print plugi
   must not. The plugin got a small test of its own that seeds a network and needs no data. The dependency now points one
   way: this repository may mention and test the plugin; the plugin's repository does not mention this one.
 
+## Two reroutes: the North - West ring cable and the Helsinki route (2026-10-26)
+
+Requirement (two parts). (1) The North - West ring cable ran alongside the West - East cable on the E4/E20: it must leave
+Ekerö by a different way, from Sjöängen under water to Viksäter or Vattubrinken north-west of Södertälje, and then
+to the datacenter. (2) The primary Helsinki route must skip Vaasa and go over road 265 and the E18 to Norrtälje, over
+Väddö and Grisslehamn, across Åland (Mariehamn, Kumlinge), over Korpo, Turku and Salo to Helsinki, on land as natural
+as possible: roads, and the power lines past Salo.
+
+- **The overlap was real and measured.** From NW-11-BOT to the Södertälje entrance every structure of the North - West
+  cable lay 10 to 110 m from the West - East cable: 16.8 km of 50.5. The old dispersion check compared structure names
+  and ducts, so it passed. It is now also made by distance (`verify.py`), over the three pairs of ring cables:
+  within 300 m of each other for no more than 0.5 km outside the 2 km lead-ins at a datacenter.
+- **Where the cable crosses Mälaren.** A straight line from Sjöängen to Viksäter or Vattubrinken crosses a land
+  peninsula (and the Vallinge firing range lies east of it), so the crossing is routed through the water: a grid of
+  water points from the OpenStreetMap shoreline, Dijkstra over it, simplified so that every straight piece stays in
+  the water (`tools/waterpath.py`). Both landings were evaluated with the same method. Vattubrinken: 7.9 km under water,
+  39 km by road (6.0 times), a 10.4 km land run that keeps away from the E4/E20 (0.7 km within 300 m of the West - East
+  cable, all at the datacenter). Viksäter: 9.2 km, 5.3 times, and its roads join the E4/E20 for 4.2 km, which defeats the
+  purpose. Vattubrinken it is. The first idea, narrow channel south of Sjöängen (0.85 km wide, 47 times shorter than
+  the road), leads into the Vallinge peninsula and was dropped.
+- **The Helsinki route is derived, not typed** (`tools/derive_longhaul.py` -> `data/longhaul_geometry.py`, generated,
+  ODbL): OSRM routes the land sections, and every ferry it uses becomes a submarine leg (Grisslehamn - Eckerö 43 km, the
+  Hummelvik - Kumlinge line, three small cable ferries). Road 265 and the E18 to Norrtälje came out of the router
+  unprompted. Kumlinge - Korpo has no ferry (46 km as the crow flies), so it is a water route between the islands:
+  50.8 km through 21 points, found with `tools/waterpath.py` over 5 300 shoreline pieces of the archipelago.
+- **Power lines past Salo.** The Overpass API gives the power=line ways of 110 kV and up (193 ways); they form a graph
+  (line ends within 450 m are joined: a substation between them), Dijkstra with a small preference for higher
+  voltages, from the line nearest to Salo to the first point within 22 km of Helsinki. The corridor is 113.6 km and
+  makes a dogleg through the Ingå substation, where two real lines meet; the last 27.6 km are roads (50, 1,
+  Mannerheimintie). Roads all the way past Salo would have been 555 km in total instead of 592.
+- **One pathway per leg.** The cable used to be one straight direct-buried line. Now each land leg is a direct-buried
+  pathway and each sea crossing a submarine pathway (the base Pathway with that type, as in the ring), owned by the
+  vendor, with a cable segment per leg in order. The route has no structures: nobody models handholes along 590 km.
+  The leg names come from Nominatim place names; a single-place name means a local road.
+- **Reconcile and retire.** An existing NetBox is brought up to date in place: moved structures are updated, the
+  ring's structures and pathways that are no longer in the plan are removed (`plant.retire()`, after the cable
+  segments point at the new legs), cable segments beyond the new leg count are deleted and the old `bb-cbl-00005-route`
+  is replaced. Retire only touches names and labels with a ring prefix (NW-, NE-, WE-).
+- **Gotchas of the derivation** (kept here because each cost an hour). The Overpass API was at capacity for about an
+  hour, on all three public servers, and a client that retries hard makes it worse: one large query with a long back-off
+  and a cache file, and Nominatim (zoom 10 returns the kommun) for the municipality lookups. `out geom(bbox)` returns
+  null for nodes outside the box, and joining across them draws false lines through the water. A grid classified row by
+  row against a known dry point got stripes wrong where a row clipped a vertex; a column pass removes runs of one or two
+  points. `python -I` ignores the script directory and PYTHONUNBUFFERED. Nominatim reverse geocoding cannot tell water
+  from land.
+- **Not changed.** The other six long-haul routes are still straight lines; the West - East and North - East cables are as
+  before (their stations and legs are re-derived from the same file, unchanged); the third Helsinki route over Gotland
+  and the Baltics is unchanged.
+
 ## Goal
 
 An educational dataset for a fresh NetBox install, built in stages that

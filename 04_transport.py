@@ -98,6 +98,42 @@ def fiber_record(nb, cable, cable_type, key, km, notes, tenants):
     return fc
 
 
+def route_legs(nb, cable, key, tenants):
+    """A long-haul cable laid leg by leg: a direct-buried pathway for every land leg and a submarine pathway for every
+    water crossing, owned by the party that owns the cable, with one cable segment per leg in cable order. The single
+    straight line this route used to be (`<cable>-route`) is retired."""
+    owner = tenants[T.ROUTE_OWNER[key]]
+    legs = T.ROUTE_LEGS[key]
+    pathways = []
+    for n, (kind, name, points) in enumerate(legs, start=1):
+        path = [tuple(p) for p in points]
+        metres = round(sum(M.km_between(*a, *b) for a, b in zip(path, path[1:])) * 1000, 1)
+        label = f"{cable.label}-route-{n:02d} {name}"
+        fields = dict(tenant=owner.id, length=metres,
+                      comments=f"{name}, {metres / 1000:.1f} km. Leg {n} of {len(legs)} of {cable.label}, owned by {owner.name}.")
+        if kind == "sub":
+            obj, st = plant._pathway(nb.plugins.pathways.pathways, label, path, {"pathway_type": "submarine"}, **fields)
+        else:
+            obj, st = plant._pathway(nb.plugins.pathways.direct_buried, label, path, {}, **fields)
+        report("submarine" if kind == "sub" else "pathway", obj, st, f"{name}, {metres / 1000:.1f} km")
+        pathways.append(obj)
+    for seq, pathway in enumerate(pathways, start=1):
+        seg = nb.plugins.pathways.cable_segments.get(cable_id=cable.id, sequence=seq)
+        if seg is None:
+            nb.plugins.pathways.cable_segments.create(cable=cable.id, pathway=pathway.id, sequence=seq)
+        elif (seg.pathway.id if seg.pathway else None) != pathway.id:
+            seg.update({"pathway": pathway.id})
+    for seg in nb.plugins.pathways.cable_segments.filter(cable_id=cable.id):
+        if seg.sequence > len(pathways):
+            seg.delete()
+    old = nb.plugins.pathways.direct_buried.get(label=f"{cable.label}-route")
+    if old is not None:
+        print(f"  [removed] pathway: {cable.label}-route — replaced by {len(pathways)} legs")
+        for seg in nb.plugins.pathways.cable_segments.filter(pathway_id=old.id):
+            seg.delete()
+        old.delete()
+
+
 def long_haul(nb, cabler, types):
     tenants = {t["code"]: nb.tenancy.tenants.get(slug=t["slug"]) for t in TENANTS}
     plant_ = {}
@@ -113,6 +149,9 @@ def long_haul(nb, cabler, types):
         if not have("pathways"):
             continue
 
+        if key in T.ROUTE_LEGS:
+            route_legs(nb, cable, key, tenants)
+            continue
         label = f"{cable.label}-route"
         names = " -> ".join(n for n, _, _ in route if n)
         comments = f"{names} ({km:.0f} km)"
@@ -160,7 +199,12 @@ def metro_cables(nb, cabler, types):
                     nb.plugins.pathways.cable_segments.create(cable=cable.id, pathway=pathway.id, sequence=seq)
                 elif (seg.pathway.id if seg.pathway else None) != pathway.id:
                     seg.update({"pathway": pathway.id})
+            for seg in nb.plugins.pathways.cable_segments.filter(cable_id=cable.id):
+                if seg.sequence > len(M.legs(key)):
+                    seg.delete()                      # the route has fewer legs than an earlier version of it
             report("route", cable, "exists", f"{len(M.legs(key))} segments, {km} km")
+    if have("pathways"):
+        plant.retire(nb)
     if not types:
         skip("fms", "fiber cable records and tube names for the ring cables")
     if not have("pathways"):

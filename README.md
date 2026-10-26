@@ -35,9 +35,10 @@ built the way it is, and the history of how it got here.
 | netbox-inventory | The cold-spares depot | No spare assets |
 
 The dataset follows the plugin releases it meets. It was built from an empty NetBox and verified (a second run
-changes nothing) on NetBox 4.6.10 with netbox-fms 0.4.1 and netbox-pathways 0.2.2 (70 checks), and on NetBox 4.7.3
-with netbox-fms 0.6.0 and netbox-pathways 0.3.0 (69 checks), which store fiber circuit paths and structure points
-differently; the loader asks the installed version (`version_at_least()` in `common.py`). netbox-secrets has no
+changes nothing) on NetBox 4.7.3 with netbox-fms 0.6.0 and netbox-pathways 0.3.0 (70 checks). Release 0.7.0 was also
+verified on NetBox 4.6.10 with netbox-fms 0.4.1 and netbox-pathways 0.2.2, which store fiber circuit paths and structure
+points differently; the loader asks the installed version (`version_at_least()` in `common.py`), but the changes since
+0.7.0 (the two reroutes) have been built on 4.7.3 only. netbox-secrets has no
 release for NetBox 4.7 yet, so there the logins and their check are skipped.
 
 `build.py` lists the plugins it found at the start, prints `[skipped]` for every step it left out, and sums them up at
@@ -64,6 +65,8 @@ before it, plus an invariant check:
 | `verify.py` | Read-only invariants: sites look alike, cables carry full attributes, planned connections exist, paths are continuous, routes match their cables, no stale text. Exits non-zero on failure |
 | `build.py` | Runs 01–07 then `verify.py` |
 | `tools/derive_metro.py` | One-off: derives the ring's geometry (`data/metro_geometry.py`) from OpenStreetMap roads and municipal borders. The build reads the result; run it only to change the route |
+| `tools/derive_longhaul.py` | One-off: derives the leased Stockholm North - Helsinki route (`data/longhaul_geometry.py`) from OpenStreetMap: roads and ferries (OSRM), a power line corridor (Overpass) and a water route between the islands. The build reads the result. |
+| `tools/waterpath.py` | Library for the two derivation tools: a cable route through the water along the OpenStreetMap shoreline, so a submarine crossing never cuts across an island or a peninsula. |
 
 A step that needs a plugin says so in its docstring and is skipped without it.
 
@@ -167,7 +170,7 @@ what is left. The remaining differences are all deliberate (see
 
 ## Releases
 
-Tagged `v0.1.0` to `v0.7.0`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
+Tagged `v0.1.0` to `v0.8.0`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
 passes `verify.py`.
 
 ## Optional: acceptance tests of netbox-tracepath-plugin

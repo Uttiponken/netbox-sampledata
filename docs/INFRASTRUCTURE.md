@@ -103,15 +103,53 @@ length.
 | `bb-cbl-00002` | `stw-patch-mma-01` – `mma-patch-stw-01` | the E4: Linköping, Jönköping, Markaryd, Hässleholm, Lund | 523 km |
 | `bb-cbl-00003` | `stn-patch-osl-01` – `osl-patch-stn-01` (**leased** from Polarlink Transit, `PLT-100234`) | Västerås, Örebro, Karlstad, Charlottenberg | 436 km |
 | `bb-cbl-00004` | `got-patch-mma-01` – `mma-patch-got-01` | the west coast: Varberg, Halmstad, Helsingborg, Landskrona | 258 km |
-| `bb-cbl-00005` | Stockholm North – Helsinki, **NSN-DF-0001** (Nordic Subsea Networks), between the vendor's two MeetMe panels | Mariehamn (Åland), Vaasa | 849 km |
+| `bb-cbl-00005` | Stockholm North – Helsinki, **NSN-DF-0001** (Nordic Subsea Networks), between the vendor's two MeetMe panels | Norrtälje, Grisslehamn, Åland (Mariehamn, Kumlinge), Korpo, Turku, Salo: roads, six sea crossings and a power line corridor, 19 legs (below) | 592 km |
 | `bb-cbl-00006` | Stockholm East – Helsinki, **BFN-DF-0001** (Baltic Fibre Networks), between the vendor's two MeetMe panels | Visby (Gotland), Riga, Tallinn | 905 km |
 | `bb-cbl-00007` | `stw-patch-got-01` – `got-patch-stw-01` (the **southern** route to Gothenburg) | Nyköping, Norrköping, Linköping, Jönköping, Borås | 389 km |
 
 The northern and southern Gothenburg trunks are the same kind of cable and
 are lit the same way (pair 1, DWDM); the southern one shares the E4 corridor
 with the Malmö trunk between Södertälje and Jönköping, as the two northern
-trunks (Gothenburg and Oslo) share the corridor to Karlstad. The routes are
-straight lines between towns; only the metro ring below follows roads.
+trunks (Gothenburg and Oslo) share the corridor to Karlstad. Six of these routes are
+straight lines between towns; the NSN route to Helsinki and the metro ring below follow roads, shores and power lines.
+
+**The Helsinki route over NSN (`bb-cbl-00005`).** The leased pair runs from Stockholm North up road 265 and the E18 to
+Norrtälje, over Väddö (roads 76 and 283) to Grisslehamn, across the sea to Eckerö on Åland, over the Åland roads to
+Mariehamn and Hummelvik, by sea to Kumlinge and, through the open water between the islands of the archipelago, to
+Korpo, then along road 180 to Pargas and Turku, along the E18 to Salo, and from there along the 110 kV and 400 kV power
+line corridor to the outskirts of Espoo and by road into Helsinki. It replaces the old route over Vaasa, which was a
+straight line of 849 km. The cable is laid leg by leg: a direct-buried pathway for each land leg, a submarine pathway
+for each sea crossing (every ferry line, the small cable ferries included, becomes a crossing; where no ferry exists the crossing is routed
+through the water along the shore, so it never cuts across an island), all owned by Nordic Subsea Networks, with one cable
+segment per leg. The circuit `NSN-DF-0001` carries the whole route as its geometry.
+
+| Leg | From – to | Laid as | Length |
+|---|---|---|---|
+| 1 | Stockholm North - Norrtälje | direct buried | 63.7 km |
+| 2 | Norrtälje - Grisslehamn | direct buried | 45.8 km |
+| 3 | Grisslehamn (local road) | direct buried | 1.5 km |
+| 4 | Grisslehamn - Berghamn | submarine | 42.9 km |
+| 5 | Berghamn - Mariehamn | direct buried | 33.6 km |
+| 6 | Mariehamn - Sund | direct buried | 33.6 km |
+| 7 | Sund - Vårdö | submarine | 0.4 km |
+| 8 | Vårdö - Hummelvik (Vårdö) | direct buried | 11.2 km |
+| 9 | Hummelvik (Vårdö) - Kumlinge | submarine | 26.4 km |
+| 10 | Kumlinge (local road) | direct buried | 5.9 km |
+| 11 | Kumlinge - Korpo | submarine | 50.8 km |
+| 12 | Korpo - Österretais | direct buried | 6.8 km |
+| 13 | Österretais - Nagu | submarine | 0.8 km |
+| 14 | Nagu (local road) | direct buried | 27.3 km |
+| 15 | Nagu - Pargas | submarine | 1.6 km |
+| 16 | Pargas - Turku | direct buried | 40.1 km |
+| 17 | Turku - Salo | direct buried | 58.0 km |
+| 18 | Salo - Esbogård | direct buried, along the 110 kV+ power line corridor | 113.6 km |
+| 19 | Esbogård - Helsinki | direct buried | 27.6 km |
+| | **Total** | 13 land legs, 6 submarine | **591.7 km** (122.9 km subsea) |
+
+The geometry is derived by `tools/derive_longhaul.py` (roads and ferries from OpenStreetMap through OSRM, the power lines
+from OpenStreetMap through the Overpass API, the water route of the Kumlinge – Korpo crossing with `tools/waterpath.py`)
+and stored in `data/longhaul_geometry.py`. The corridor makes a small dogleg through the Ingå substation, where the two
+real lines meet. Who owns what is invented.
 
 **Strands and fiber circuits.** A trunk panel's duplex LC port *n* carries pair *n*, so strands 2*n*-1 and 2*n* of the
 cable (netbox-fms `FiberStrand`) are landed on port *n* of the panel at each end; the strand records give the tube and
@@ -139,7 +177,7 @@ commercial record whose terminations stay **uncabled**; the glass is the
 single direct Cable (a Cable is physical connectivity, a Circuit is the
 contract, and the two are deliberately different objects). The leased
 circuits additionally carry the same route as a circuit geometry. Helsinki's
-two routes are chosen for path diversity: one through Åland and Vaasa, one
+two routes are chosen for path diversity: one through Åland and Turku, one
 through Gotland and the Baltics.
 
 ## 4. The Stockholm metro ring
@@ -155,7 +193,7 @@ long-haul routes, and the zones are tied together by three metro cables:
 
 | Cable | Between | Owner of the cable | Length | Route |
 |---|---|---|---|---|
-| `bb-cbl-00008` | North – West | Nordfiber AB | 50.5 km | Sollentuna, Hässelby, **water crossing of Mälaren**, Färingsö, Ekerö, Södertälje (ends on the E4/E20) |
+| `bb-cbl-00008` | North – West | Nordfiber AB | 57.2 km | Sollentuna, Hässelby, **water crossing of Mälaren**, Färingsö, Ekerö (along its south coast to Sjöängen), **water crossing of the Mälaren bay (7.5 km)**, Vattubrinken, Södertälje (arriving from the north-west, away from the E4/E20) |
 | `bb-cbl-00009` | North – East | Nordfiber AB | 40.6 km | Sollentuna, Danderyd, **water crossing**, Lidingö, **water crossing**, Orminge on road 222, Nacka |
 | `bb-cbl-00010` | West – East | **Stockholm Metro Fibre AB**, leased whole as `SMF-DF-0001` | 38.6 km | E4/E20, road 75 and road 222: Södertälje, Salem, Botkyrka, Huddinge, Stockholm, Nacka |
 
@@ -178,24 +216,28 @@ municipality.
 
 **Real ducts, structure by structure.** Each cable is routed through its ducts leg by leg
 (netbox-pathways): 48 structures (building entrances, manholes, handholes, vaults at the municipal
-borders), 6 concrete duct banks (the lead-ins at the datacenters), 42 conduits each with an innerduct, and
-3 submarine pathways (the water crossings, which are Nordfiber's own). That is 52 cable segments. The
+borders), 6 concrete duct banks (the lead-ins at the datacenters), 41 conduits each with an innerduct, and
+4 submarine pathways (the water crossings, which are Nordfiber's own). That is 45 cable segments. The
 legs follow public roads and change owner where the real municipal border is; the municipalities are
 **Sollentuna, Danderyd, Lidingö, Nacka, Stockholm, Ekerö, Botkyrka, Salem, Huddinge and Södertälje**
 (tenant group "Municipalities").
 
 | Cable | Owners along the route (km of duct) |
 |---|---|
-| North – West | Sollentuna 2.1 → Stockholm 10.3 → water 4.2 → Ekerö 13.3 → Botkyrka 9.0 → Salem 5.6 → Södertälje 6.0 |
+| North – West | Sollentuna 2.1 → Stockholm 10.3 → water 4.2 → Ekerö 22.4 → water 7.8 → Södertälje 10.3 |
 | North – East | Sollentuna 5.6 → Danderyd 7.2 → water 2.2 → Lidingö 11.8 → water 3.5 → Nacka 10.3 |
 | West – East | Södertälje 7.0 → Salem 4.9 → Botkyrka 6.3 → Huddinge 6.3 → Stockholm 10.5 → Nacka 3.7 |
 
 **Dispersed routing.** Each datacenter has two separate building entrances, one per ring cable, and no duct and
 no structure outside the buildings is shared between two cables (`verify.py` checks it). The cables do
 share owners (Stockholms stad owns ducts on two of them), which is an organisational dependency, not a
-physical one.
+physical one. The check is also made by distance: no two ring cables may run within 300 m of each other for more than
+0.5 km outside the 2 km lead-ins at a datacenter. The North – West cable used to share the E4/E20 corridor with the West – East
+cable for its last 16.8 km (different ducts, same road), which a check on structure names cannot see; it now leaves Ekerö
+across the open water of Mälaren and reaches Södertälje from the north-west.
 
-The geometry (stations, legs, borders) is derived from OpenStreetMap by `tools/derive_metro.py` and stored in
+The geometry (stations, legs, borders) is derived from OpenStreetMap by `tools/derive_metro.py` (the crossing between Sjöängen
+and Vattubrinken with `tools/waterpath.py`, which routes it through the water along the shore) and stored in
 `data/metro_geometry.py`. The municipalities and the roads are real; the ownership, the ducts and every
 coordinate to the metre are invented for the scenario.
 Road and boundary data: © OpenStreetMap contributors, ODbL (https://www.openstreetmap.org/copyright).
@@ -205,12 +247,13 @@ for conduit banks, conduits, aerial spans, direct-buried pathways and circuits, 
 the **Map** button on a crossing's page (`?select=submarine-<id>`) finds nothing to centre on, so the map falls back
 to its default view (the extent of the whole dataset, not the crossing).
 
-The 42 innerducts have the same limitation, because they are base pathways too. They are not drawn, the search box
+The 41 innerducts have the same limitation, because they are base pathways too. They are not drawn, the search box
 skips them, and the **Map** button on an innerduct's page (`?select=innerduct-<id>`) also opens the map on the whole
 dataset instead of the stretch. Each innerduct has exactly the line of its parent conduit, so the route is visible
 through the conduit, but the innerduct itself (its owner, its colour, the cable inside it) cannot be selected on the
-map. This matters for the metro ring: of its 52 cable segments, 42 lie in innerducts and 3 in submarine crossings,
-and only the 7 direct-buried ones are on a pathway type the map draws. The data is as netbox-pathways models it
+map. This matters: of the dataset's 70 cable segments, 41 lie in innerducts (the ring) and 10 in submarine crossings (4 in the ring,
+6 on the Helsinki route), and only the 19 direct-buried ones (six long-haul routes and 13 land legs to Helsinki) are on a pathway
+type the map draws. The circuit geometry of `NSN-DF-0001` does show the whole Helsinki route. The data is as netbox-pathways models it
 (a cable segment on an innerduct inside a conduit); nothing is missing from the dataset.
 
 ## 5. DWDM transport
