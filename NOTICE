@@ -1,0 +1,23 @@
+netbox-sampledata
+Copyright 2026 JP (https://github.com/Uttiponken)
+
+Licensed under the Apache License, Version 2.0 (see LICENSE), except for the
+OpenStreetMap data described below.
+
+OpenStreetMap data
+------------------
+The generated geometry files in data/ whose header names OpenStreetMap (at the
+time of writing data/metro_geometry.py and data/longhaul_geometry.py) contain
+data derived from OpenStreetMap, (c) OpenStreetMap contributors. That data is
+available under the Open Data Commons Open Database License (ODbL) 1.0
+(https://opendatacommons.org/licenses/odbl/1-0/), and these files are made
+available under the ODbL 1.0 as well. See https://www.openstreetmap.org/copyright.
+The tools that derive them (tools/derive_metro.py, tools/derive_longhaul.py,
+tools/waterpath.py) are code and are covered by the Apache License.
+
+Device types
+------------
+The real hardware models are fetched from the NetBox Community Device Type
+Library (https://github.com/netbox-community/devicetype-library) when
+02_hardware.py runs. They are not stored in this repository and are covered by
+that project's own licence.
