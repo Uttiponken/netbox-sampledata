@@ -7,7 +7,7 @@ thin slice above them) is in `README.md`, the reasons behind it in `DESIGN.md`, 
 
 ## Done
 
-Released `v0.1.0` to `v0.8.1` (2026-10-03 to 2026-10-28). Every release builds from an empty NetBox in one run and
+Released `v0.1.0` to `v0.8.2` (2026-10-03 to 2026-10-28). Every release builds from an empty NetBox in one run and
 passes `verify.py`. The milestones:
 
 - **0.2.0** The build rewritten as seven layered, reconciling scripts.
@@ -18,6 +18,8 @@ passes `verify.py`. The milestones:
 - **0.8.0** The North - West cable rerouted over Mälaren, the Helsinki route over Norrtälje, Åland and Turku.
 - **0.8.1** The southern Baltic backup route (`BFN-DF-0001`) leg by leg over Nynäshamn, Gotland, Ventspils, Riga and
   Tallinn, as in `Baltic Route.md`.
+- **0.8.2** Builds on netbox-wdm 0.2.2 and 0.3.0 (0.3.0 renamed the grid keys; the loader writes the key the installed
+  version knows). Released together with netbox-docker v1.2.0, which moves to netbox-wdm 0.3.0.
 
 0.8.0 also builds on netbox-docker v1.1.0 (with netbox-dns, netbox-notices, netbox-cable-labels and
 netbox-topology-views added): 70 checks passed, 0 failed, and a second run changed nothing (2026-10-28).

@@ -2,6 +2,22 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
+## 0.8.2
+
+netbox-wdm 0.3.0 support; the data itself is as in 0.8.1.
+
+- **netbox-wdm 0.3.0 renamed the 100 GHz C-band grid key** (`dwdm_100ghz` is now `dwdm_c_100ghz`). Its migration
+  rewrites the profile and the nodes already stored, but the API refuses the old key, and the loader wrote it on every
+  run, so 0.8.1 cannot build on 0.3.0: `{'grid': ['"dwdm_100ghz" is not a valid choice.']}` in `02_hardware.py`, also
+  over an upgraded database. `02_hardware.py` now asks the installed version (`wdm_grid()`, through
+  `version_at_least()`) and writes the key it knows, for the profile and for nodes made late. On netbox-wdm 0.2.2 it
+  writes the same key as before.
+- **Checked** on throwaway NetBox 4.7.4 instances: 0.8.1 built on netbox-wdm 0.2.2, then the plugin upgraded to 0.3.0
+  (migrations 0009 to 0012, the profile and 18 nodes moved to the new key, `verify.py` 70 passed, 0 failed, and a
+  rebuild with this change changes nothing); and from an empty database on 0.3.0 (70 passed, 0 failed, a second run
+  changes nothing). The netbox-tracepath-plugin smoke test passes on both, and the acceptance tests in
+  `tests/tracepath/` (WDM and FMS prints included) on the one built from empty.
+
 ## 0.8.1
 
 One route changed; the rest of the dataset is as in 0.8.0. Built from an empty NetBox on 4.7.3 (netbox-fms 0.6.0, netbox-pathways 0.3.0, netbox-wdm 0.2.2; netbox-secrets is not installed, so its login step is skipped): `verify.py` passes (70 checks). After the dev NetBox moved to 4.7.4, a second `build.py` changes nothing and `verify.py` still passes. The in-place upgrade of a 0.8.0 database has not been rehearsed (see `docs/DESIGN.md`, 2026-10-28).

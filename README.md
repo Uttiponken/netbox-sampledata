@@ -38,7 +38,8 @@ The dataset follows the plugin releases it meets. It was built from an empty Net
 changes nothing) on NetBox 4.7.3 with netbox-fms 0.6.0 and netbox-pathways 0.3.0 (70 checks). Release 0.7.0 was also
 verified on NetBox 4.6.10 with netbox-fms 0.4.1 and netbox-pathways 0.2.2, which store fiber circuit paths and structure
 points differently; the loader asks the installed version (`version_at_least()` in `common.py`), but the changes since
-0.7.0 (the two reroutes) have been built on 4.7.3 only. netbox-secrets has no
+0.7.0 (the two reroutes) have been built on 4.7.3 only. netbox-wdm 0.2.2 and 0.3.0 both work: 0.3.0 renamed the grid
+keys, and the loader writes the one the installed version knows. netbox-secrets has no
 release for NetBox 4.7 yet, so there the logins and their check are skipped.
 
 `build.py` lists the plugins it found at the start, prints `[skipped]` for every step it left out, and sums them up at
@@ -170,7 +171,7 @@ what is left. The remaining differences are all deliberate (see
 
 ## Releases
 
-Tagged `v0.1.0` to `v0.8.1`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
+Tagged `v0.1.0` to `v0.8.2`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
 passes `verify.py`.
 
 ## Optional: acceptance tests of netbox-tracepath-plugin

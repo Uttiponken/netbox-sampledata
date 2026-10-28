@@ -22,13 +22,18 @@ import re
 import naming
 from common import (
     api, assign_contact, connect, create_device_type_from_yaml, create_module_type_from_yaml, ensure,
-    fetch_devicetype_yaml, fetch_moduletype_yaml, get_or_create, have, report, skip,
+    fetch_devicetype_yaml, fetch_moduletype_yaml, get_or_create, have, report, skip, version_at_least,
 )
 from data import hardware as H
 from data.organization import CONTACT_ASSIGNMENTS, SITES, TENANTS
 from layout import inventory, site_by_code
 
-WDM_PROFILE = {"node_type": "terminal_mux", "grid": "dwdm_100ghz", "fiber_type": "single_fiber"}
+WDM_PROFILE = {"node_type": "terminal_mux", "fiber_type": "single_fiber"}
+
+
+def wdm_grid():
+    """The 100 GHz C-band grid key; netbox-wdm 0.3.0 renamed it and migrates the rows it already holds."""
+    return "dwdm_c_100ghz" if version_at_least("wdm", 0, 3) else "dwdm_100ghz"
 
 
 SITE_CODE = {naming.site_slug(s): s["code"].upper() for s in SITES}
@@ -73,7 +78,7 @@ def wdm_nodes(nb, wdm_type, devices):
             continue
         if nb.plugins.wdm.wdm_nodes.get(device_id=dev.id):
             continue
-        node = nb.plugins.wdm.wdm_nodes.create(device=dev.id, node_type=WDM_PROFILE["node_type"], grid=WDM_PROFILE["grid"])
+        node = nb.plugins.wdm.wdm_nodes.create(device=dev.id, node_type=WDM_PROFILE["node_type"], grid=wdm_grid())
         report("wdm node", node, "created", dev.name)
 
 
@@ -98,7 +103,7 @@ def run(nb):
     print("== WDM profile + 40-channel plan ==")
     wdm_type = types[H.T_WDM]
     if have("wdm"):
-        profile, st = ensure(nb.plugins.wdm.wdm_profiles, {"device_type_id": wdm_type.id}, device_type=wdm_type.id, **WDM_PROFILE)
+        profile, st = ensure(nb.plugins.wdm.wdm_profiles, {"device_type_id": wdm_type.id}, device_type=wdm_type.id, grid=wdm_grid(), **WDM_PROFILE)
         report("wdm profile", profile, st)
         made = 0
         for n in range(1, 41):

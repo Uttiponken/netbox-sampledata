@@ -309,6 +309,23 @@ Imavere to Tallinn, and under the water to the Vuosaari harbour (Vuosaaren satam
   NetBox 4.7.3: `verify.py` passes (70 checks), and a second `build.py` after the move to 4.7.4 changes nothing. The
   in-place upgrade of a 0.8.0 database described above has not been rehearsed.
 
+## netbox-wdm 0.3.0: the grid key (2026-10-28)
+
+netbox-wdm 0.3.0 (NetBox 4.7 only) renamed the C-band grid keys: `dwdm_100ghz` is now `dwdm_c_100ghz`, `dwdm_50ghz`
+is `dwdm_c_50ghz`. Its migration 0012 rewrites the keys already stored on profiles and nodes, so an upgraded NetBox
+keeps its data, but the API refuses the old key. The loader wrote it on every run (the profile is reconciled), so a
+build failed in layer 2, on an empty database and on an upgraded one alike.
+
+- **The key follows the installed version** (`wdm_grid()` in `02_hardware.py`), the same `version_at_least()` pattern
+  as for netbox-pathways 0.3 and netbox-fms 0.6, so the dataset keeps building on 0.2.2. Nothing else names a grid
+  key: channels are found by `grid_position`, and the print plugin shows the grid's label, not its key.
+- **The other changes in 0.3.0 needed nothing here.** It now refuses invalid WDM cabling at save time, and the
+  dataset's cabling passes; its trace walk now follows NetBox's own cable paths, and `verify.py`'s WDM checks and the
+  wavelength-service prints of `tests/tracepath/` pass; the new `max_trace_hops` setting keeps its default (20).
+- **Verified** on throwaway NetBox 4.7.4 instances: 0.8.1 built on netbox-wdm 0.2.2, the plugin upgraded to 0.3.0
+  (1 profile and 18 nodes moved to the new key), `verify.py` 70/0 and a rebuild that changes nothing; then from an
+  empty database on 0.3.0, 70/0 and a second run that changes nothing.
+
 ## Goal
 
 An educational dataset for a fresh NetBox install, built in stages that
