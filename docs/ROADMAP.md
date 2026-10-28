@@ -7,7 +7,7 @@ thin slice above them) is in `README.md`, the reasons behind it in `DESIGN.md`, 
 
 ## Done
 
-Released `v0.1.0` to `v0.8.0` (2026-10-03 to 2026-10-26). Every release builds from an empty NetBox in one run and
+Released `v0.1.0` to `v0.8.1` (2026-10-03 to 2026-10-28). Every release builds from an empty NetBox in one run and
 passes `verify.py`. The milestones:
 
 - **0.2.0** The build rewritten as seven layered, reconciling scripts.
@@ -16,17 +16,15 @@ passes `verify.py`. The milestones:
   without plugins.
 - **0.7.0** Loads into NetBox 4.7.3 (netbox-fms 0.6, netbox-pathways 0.3).
 - **0.8.0** The North - West cable rerouted over Mälaren, the Helsinki route over Norrtälje, Åland and Turku.
+- **0.8.1** The southern Baltic backup route (`BFN-DF-0001`) leg by leg over Nynäshamn, Gotland, Ventspils, Riga and
+  Tallinn, as in `Baltic Route.md`.
 
 0.8.0 also builds on netbox-docker v1.1.0 (with netbox-dns, netbox-notices, netbox-cable-labels and
 netbox-topology-views added): 70 checks passed, 0 failed, and a second run changed nothing (2026-10-28).
 
 ## In progress
 
-- **The southern Baltic backup route.** The Stockholm East - Helsinki route (`bb-cbl-00006`, `BFN-DF-0001`) follows
-  the route of `Baltic Route.md`, over Gotland, Latvia and Estonia, leg by leg instead of one straight line. Details
-  are under "Unreleased" in `CHANGELOG.md`. Built from an empty NetBox 4.7.3: 70 checks passed, 0 failed, and a second
-  run on 4.7.4 changed nothing (2026-10-28). To finish: release. The in-place upgrade of a 0.8.0 database has not been
-  rehearsed.
+Nothing at the moment. Open from 0.8.1: the in-place upgrade of a 0.8.0 database to 0.8.1 has not been rehearsed.
 
 ## Planned, when the stack changes
 

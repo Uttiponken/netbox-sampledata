@@ -2,9 +2,9 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
-## Unreleased
+## 0.8.1
 
-Built from an empty NetBox on 4.7.3 (netbox-fms 0.6.0, netbox-pathways 0.3.0, netbox-wdm 0.2.2; netbox-secrets is not installed, so its login step is skipped): `verify.py` passes (70 checks). After the dev NetBox moved to 4.7.4, a second `build.py` changes nothing and `verify.py` still passes. The in-place upgrade of a 0.8.0 database has not been rehearsed (see `docs/DESIGN.md`, 2026-10-28).
+One route changed; the rest of the dataset is as in 0.8.0. Built from an empty NetBox on 4.7.3 (netbox-fms 0.6.0, netbox-pathways 0.3.0, netbox-wdm 0.2.2; netbox-secrets is not installed, so its login step is skipped): `verify.py` passes (70 checks). After the dev NetBox moved to 4.7.4, a second `build.py` changes nothing and `verify.py` still passes. The in-place upgrade of a 0.8.0 database has not been rehearsed (see `docs/DESIGN.md`, 2026-10-28).
 
 - **The Stockholm East - Helsinki backup route (`bb-cbl-00006`, `BFN-DF-0001`) follows the southern Baltic route of
   `docs/Baltic Route.md`.** From Nacka by road past Handen to Västerhaninge, along the railway to Nynäshamn, under the

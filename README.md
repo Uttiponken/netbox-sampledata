@@ -170,7 +170,7 @@ what is left. The remaining differences are all deliberate (see
 
 ## Releases
 
-Tagged `v0.1.0` to `v0.8.0`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
+Tagged `v0.1.0` to `v0.8.1`, listed in `CHANGELOG.md`. Every release builds from an empty NetBox in one run and
 passes `verify.py`.
 
 ## Optional: acceptance tests of netbox-tracepath-plugin
