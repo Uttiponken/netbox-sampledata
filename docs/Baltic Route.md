@@ -1,0 +1,2 @@
+**Baltic Route**
+Nacka via Handen, Västerhaninge and along the railline to Nynäshamn and under the water to Fårösund on Gotland. Continue via road to Ljugarn and again under water to Ventspilts and along the major roads via Pūre to Riga. From here continue along major roads via Valmiera, Valga, Viljandi, Imavere to Tallinn and under water to Vuosaaren satama and Helsinki.

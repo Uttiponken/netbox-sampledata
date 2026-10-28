@@ -32,7 +32,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))      # waterpath.
 
 UA = "netbox-sampledata-geocheck/1.0 (educational dataset)"
 OSRM = "https://router.project-osrm.org"
-OVERPASS = "https://overpass-api.de/api/interpreter"
+# another public instance when the main one does not answer, e.g. OVERPASS_URL=https://overpass.openstreetmap.fr/api/interpreter
+OVERPASS = os.environ.get("OVERPASS_URL", "https://overpass-api.de/api/interpreter")
 OUT = "data/metro_geometry.py"
 
 SAMPLE_M = 700          # municipality sampling step along a route

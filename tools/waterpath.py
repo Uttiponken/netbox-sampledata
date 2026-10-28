@@ -125,7 +125,11 @@ class Water:
             if ay == by:
                 continue
             r0, r1 = sorted((ay, by))
-            for r in range(max(0, math.ceil((r0 - self.s) / self.dy)), min(self.rows - 1, math.floor((r1 - self.s) / self.dy)) + 1):
+            # one row of margin on each side: for a vertex on a row, (y - s) / dy can come out as 756.0000000000002, and ceil()
+            # then skipped that row for the segment above the vertex while the half-open test skipped it for the one below; the
+            # row lost a crossing and was classified the wrong way round from that vertex to its east end (Tallinn - Vuosaari)
+            for r in range(max(0, math.ceil((r0 - self.s) / self.dy) - 1),
+                           min(self.rows - 1, math.floor((r1 - self.s) / self.dy) + 1) + 1):
                 y = self.s + r * self.dy
                 if r0 <= y < r1:                                         # half-open, so a vertex on a row counts once
                     by_row.setdefault(r, []).append(ax + (bx - ax) * (y - ay) / (by - ay))

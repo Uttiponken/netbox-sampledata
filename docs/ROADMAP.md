@@ -24,8 +24,9 @@ netbox-topology-views added): 70 checks passed, 0 failed, and a second run chang
 
 - **The southern Baltic backup route.** The Stockholm East - Helsinki route (`bb-cbl-00006`, `BFN-DF-0001`) follows
   the route of `Baltic Route.md`, over Gotland, Latvia and Estonia, leg by leg instead of one straight line. Details
-  are under "Unreleased" in `CHANGELOG.md`. It has been checked offline but not yet loaded into a NetBox. To finish:
-  build it into a NetBox, `verify.py`, a second run that changes nothing, then release.
+  are under "Unreleased" in `CHANGELOG.md`. Built from an empty NetBox 4.7.3: 70 checks passed, 0 failed, and a second
+  run on 4.7.4 changed nothing (2026-10-28). To finish: release. The in-place upgrade of a 0.8.0 database has not been
+  rehearsed.
 
 ## Planned, when the stack changes
 

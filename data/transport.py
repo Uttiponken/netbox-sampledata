@@ -24,7 +24,7 @@ PROVIDERS = [
     {"name": "Nordic Subsea Networks AB", "slug": "nordic-subsea-networks-ab",
      "description": "Fictional Nordic subsea/terrestrial fiber vendor. Leases Route 1 (Stockholm, Norrtälje, Åland, Turku, Salo, Helsinki) to Nordfiber."},
     {"name": "Baltic Fibre Networks OÜ", "slug": "baltic-fibre-networks-ou",
-     "description": "Fictional Baltic fiber vendor. Leases Route 2 (Stockholm, Gotland, Riga, Tallinn, Helsinki) to Nordfiber."},
+     "description": "Fictional Baltic fiber vendor. Leases Route 2 (Stockholm, Nynäshamn, Gotland, Ventspils, Riga, Tallinn, Helsinki) to Nordfiber."},
     {"name": "Stockholm Metro Fibre AB", "slug": "stockholm-metro-fibre-ab",
      "description": "Fictional Stockholm metro fiber operator. Owns the Södertälje - Nacka cable and leases it, whole, to Nordfiber."},
 ]
@@ -56,7 +56,8 @@ CIRCUITS = [
      "geometry": "nsn"},
     {"cid": "BFN-DF-0001", "provider": "baltic-fibre-networks-ou", "type": "dark-fiber", "tenant": "nordfiber",
      "rate": None, "sites": {"A": "ste", "Z": "hel"},
-     "description": "Backup leased dark fiber pair, Stockholm East - Helsinki via Gotland, Riga and Tallinn. Longer, geographically diverse route.",
+     "description": "Backup leased dark fiber pair, Stockholm East - Helsinki via Nynäshamn, Gotland, Ventspils, Riga, Valga and Tallinn. "
+                    "Longer, geographically diverse route.",
      "geometry": "bfn"},
     {"cid": "SMF-DF-0001", "provider": "stockholm-metro-fibre-ab", "type": "dark-fiber", "tenant": "nordfiber",
      "rate": None, "sites": {"A": "stw", "Z": "ste"},
@@ -75,10 +76,10 @@ CABLED_TERMINATIONS = [
     ("VKB-INET-0001", "A", ("rearport", "got-mmr-vastkust-01", "Trunk"), "Internet handoff at the provider's MeetMe panel"),
 ]
 
-# Zone coordinates (lon, lat), the same as the sites in data/organization.py.
+# Zone coordinates (lon, lat), the same as the sites in data/organization.py. (Stockholm East's only long-haul route, to
+# Helsinki over BFN, is derived leg by leg and starts at the same point.)
 _STN = ("Stockholm North (Sollentuna)", 17.9200, 59.4405)
 _STW = ("Stockholm West (Södertälje)", 17.6420, 59.1745)
-_STE = ("Stockholm East (Nacka)", 18.1660, 59.3125)
 
 def _longhaul_route(key):
     """The whole route of a long-haul cable as (name, lon, lat) points: the legs of data/longhaul_geometry.py joined, with
@@ -108,15 +109,14 @@ ROUTES = {
     "bb5": [_STW, ("Nyköping", 17.0090, 58.7530), ("Norrköping", 16.1924, 58.5877), ("Linköping", 15.6214, 58.4108),
             ("Jönköping", 14.1618, 57.7826), ("Borås", 12.9401, 57.7210), ("Gothenburg", 11.9746, 57.7089)],
     "nsn": _longhaul_route("nsn"),         # derived from OpenStreetMap, leg by leg (data/longhaul_geometry.py)
-    "bfn": [_STE, ("Visby (Gotland)", 18.2948, 57.6348), ("Riga", 24.1052, 56.9496),
-            ("Tallinn", 24.7536, 59.4370), ("Helsinki", 24.9384, 60.1699)],
+    "bfn": _longhaul_route("bfn"),         # likewise: Nynäshamn, Gotland, Ventspils, Riga, Tallinn
 }
 ROUTES.update(M.ROUTES)      # the metro links' routes (nw, ne, we), for the leased circuit's geometry
 
 # Long-haul routes that are laid leg by leg: land legs are direct buried, water crossings submarine pathways. The other
 # long-haul routes are one straight direct-buried line each. The legs belong to the party that owns the cable.
-ROUTE_LEGS = {"nsn": LONGHAUL["nsn"]["legs"]}
-ROUTE_OWNER = {"nsn": "nsn"}
+ROUTE_LEGS = {"nsn": LONGHAUL["nsn"]["legs"], "bfn": LONGHAUL["bfn"]["legs"]}
+ROUTE_OWNER = {"nsn": "nsn", "bfn": "bfn"}
 
 # Long-haul cables, created in this order: the label bb-cbl-0000N follows it (the metro ring continues the numbering).
 #   (route key, end A, end B, note, FMS note)
@@ -139,7 +139,7 @@ LONG_HAUL = [
      "NSN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm North - Helsinki via Norrtälje, Grisslehamn, Åland, Korpo, Turku and Salo",
      "Leased from Nordic Subsea Networks AB under NSN-DF-0001. 24 pairs (48 fibers)."),
     ("bfn", ("ste-mmr-bfn-01", "Trunk"), ("hel-mmr-bfn-01", "Trunk"),
-     "BFN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm East - Helsinki via Gotland, Riga and Tallinn",
+     "BFN-DF-0001: leased 24-pair trunk between the vendor's MeetMe panels, Stockholm East - Helsinki via Nynäshamn, Gotland, Ventspils, Riga, Valga and Tallinn",
      "Leased from Baltic Fibre Networks OÜ under BFN-DF-0001. 24 pairs (48 fibers)."),
     ("bb5", ("stw-patch-got-01", "Trunk"), ("got-patch-stw-01", "Trunk"),
      "Nordfiber-owned 24-pair trunk, Stockholm West - Gothenburg, the southern route via Nyköping, Norrköping, Linköping, Jönköping, Borås",

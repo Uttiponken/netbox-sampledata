@@ -65,7 +65,7 @@ before it, plus an invariant check:
 | `verify.py` | Read-only invariants: sites look alike, cables carry full attributes, planned connections exist, paths are continuous, routes match their cables, no stale text. Exits non-zero on failure |
 | `build.py` | Runs 01–07 then `verify.py` |
 | `tools/derive_metro.py` | One-off: derives the ring's geometry (`data/metro_geometry.py`) from OpenStreetMap roads and municipal borders. The build reads the result; run it only to change the route |
-| `tools/derive_longhaul.py` | One-off: derives the leased Stockholm North - Helsinki route (`data/longhaul_geometry.py`) from OpenStreetMap: roads and ferries (OSRM), a power line corridor (Overpass) and a water route between the islands. The build reads the result. |
+| `tools/derive_longhaul.py` | One-off: derives the two leased Stockholm - Helsinki routes (`data/longhaul_geometry.py`) from OpenStreetMap: over Åland and Turku (NSN) and over Gotland and the Baltics (BFN), with roads and ferries (OSRM), a power line and a railway corridor (Overpass) and water routes for the sea crossings. `python tools/derive_longhaul.py bfn` derives one route and keeps the other. The build reads the result. |
 | `tools/waterpath.py` | Library for the two derivation tools: a cable route through the water along the OpenStreetMap shoreline, so a submarine crossing never cuts across an island or a peninsula. |
 
 A step that needs a plugin says so in its docstring and is skipped without it.

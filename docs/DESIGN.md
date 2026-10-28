@@ -105,7 +105,8 @@ here is specific to the print plugin, which just draws the colour NetBox stores.
   netbox-fms below 0.6 (`version_at_least("fms", 0, 6)` in `common.py`). `verify.py` checks the same facts
   either way: the circuit's ends, that the path is complete, and that it is the pair the plan names.
 - **Loss and wavelength.** 1550 nm, and the loss of the bare fiber end to end (0.21 dB/km plus 1.5 dB of
-  connectors), which comes to 55 to 192 dB. It is not a link budget; amplifiers are not modelled. The constants
+  connectors), which comes to 55 to 244 dB (the top is the 1154 km BFN route since 2026-10-28). It is not a link budget;
+  amplifiers are not modelled. The constants
   are in `data/transport.py`.
 - **No circuit on `bb-cbl-00002`.** Stockholm-Malmö has no cabled path through it (`NF-BRG-0001` is cabled
   router to router), so no pair is in use.
@@ -247,6 +248,66 @@ as possible: roads, and the power lines past Salo.
 - **Not changed.** The other six long-haul routes are still straight lines; the West - East and North - East cables are as
   before (their stations and legs are re-derived from the same file, unchanged); the third Helsinki route over Gotland
   and the Baltics is unchanged.
+
+## The southern Baltic route to Helsinki (2026-10-28)
+
+Requirement (`docs/Baltic Route.md`): the backup route `BFN-DF-0001` / `bb-cbl-00006` from Stockholm East runs from Nacka
+via Handen and Västerhaninge, along the railway to Nynäshamn, under the water to Fårösund on Gotland, by road to Ljugarn,
+under the water to Ventspils, along the major roads via Pūre to Riga, along major roads via Valmiera, Valga, Viljandi and
+Imavere to Tallinn, and under the water to the Vuosaari harbour (Vuosaaren satama) and Helsinki.
+
+- **Derived, like the NSN route.** `tools/derive_longhaul.py` now holds a chain per route (`ROUTES["nsn"]`,
+  `ROUTES["bfn"]`) and `python tools/derive_longhaul.py bfn` derives one route and keeps the other as it is in
+  `data/longhaul_geometry.py` (the NSN block came back byte for byte). `data/transport.py` lays BFN leg by leg exactly
+  like NSN (`ROUTE_LEGS`, `ROUTE_OWNER`); `04_transport.py` and `verify.py` needed no change, because both already follow
+  `ROUTE_LEGS`. 15 legs, 1154.3 km (761.0 on land, 393.3 under water), 2.95 times the straight line of 391 km; it was one
+  straight line of 905 km over Visby. It is now almost twice the NSN route (591.7 km), which keeps it the longer,
+  diverse backup.
+- **Every waypoint of the document is a joint of the route,** so each leg is named after two of them and the circuit
+  geometry lists them in order. Three readings of the document: "along the railline" starts at Västerhaninge (the
+  railway also passes Handen, but the document names both towns before the railway); Handen is joined where road 73
+  passes it, 1 km east of the town point, because the town point made the route leave road 73 and come back (a 0.4 km
+  spur); Imavere is the one on road 2 in Järva county (Nominatim's first hit is a village on Saaremaa).
+- **Major roads.** OSRM keeps to them on its own (A10, A2, A3, road 2, Gotland's 148/147/146/143), except Valga -
+  Viljandi, where it takes 28 km of five-digit local roads (79.4 km). A hidden waypoint at Karksi-Nuia keeps it on roads
+  6 and 49 (93.4 km).
+- **The railway corridor.** One Overpass query for `railway=rail` without a `service` tag (no sidings or yards) between
+  Västerhaninge and Nynäshamn, the ways as a graph, Dijkstra from the rail node nearest Västerhaninge station to the one
+  nearest the Nynäshamn shore chamber: 32.2 km over 44 ways, joined 70 m and 149 m from the ends. The leg is one
+  direct-buried pathway named "(railway corridor)". The power line code was factored into the same graph helpers,
+  unchanged in behaviour.
+- **The three sea crossings** are routed with `tools/waterpath.py`: Nynäshamn - Fårösund 132.8 km (straight line 132.0),
+  Ljugarn - Ventspils 170.3 km (171.4), Tallinn - Vuosaari 90.3 km (89.8). There is no road alternative to compare with
+  (Gotland is an island, the Baltic and the Gulf of Finland are open sea); the router's job here is the landings. The
+  Nynäshamn crossing leaves the harbour southwards through the channel and enters the Fårösund strait from the north, so
+  the chamber is on the Gotland side and the road to Ljugarn does not take the Fårö ferry; the Vuosaari crossing threads
+  the Helsinki archipelago into the harbour basin. Shore chambers lie 78/205 m, 319/40 m and 62/291 m from the water. An
+  offline check found no shoreline crossed at sea on any of the three. Open sea uses a coarser grid (0.004 by 0.002
+  degrees), the Helsinki archipelago the fine one (0.002 by 0.001).
+- **A waterpath bug, fixed.** The first Tallinn - Vuosaari route ended 8.5 km short of the harbour, in a Helsinki bay:
+  two whole grid rows (60.133 and 60.136) were land from x = 25.03 eastwards and cut the harbour off. A coastline vertex
+  lay exactly on the row; `(y - s) / dy` came out as 756.0000000000002, `ceil()` skipped the row for the segment above
+  the vertex and the half-open test skipped it for the one below, so the row lost one crossing and was inverted from that
+  vertex on. `_classify` now tries one row more on each side and lets the exact half-open test decide. This is the cause
+  of the "stripes where a row clipped a vertex" of 2026-10-26; the column pass stays as a second guard. The NSN and ring
+  geometry were not re-derived, so they are unchanged.
+- **The dry reference point must be dry.** The first point at Nynäshamn lay in a bay, and 95 % of the grid came out as
+  land. Each crossing now names its reference (`ROUTES[...]["water"]`), checked to be an odd number of shore crossings
+  from a point in open sea.
+- **Overpass.** `overpass-api.de` (and its z/lz4 mirrors, kumi.systems, private.coffee, openstreetmap.ru) did not even
+  accept a TCP connection for the whole session, and the VK Maps instance answered 504; `overpass.openstreetmap.fr`
+  answered. `tools/derive_metro.py` now reads the endpoint from `OVERPASS_URL` (the default is unchanged), which all three
+  tools use: `OVERPASS_URL=https://overpass.openstreetmap.fr/api/interpreter python tools/derive_longhaul.py bfn`. The
+  shorelines and the railway are cached in `tools/.cache` (four queries in all).
+- **Upgrading an existing NetBox.** As for NSN on 2026-10-26: `04_transport.py` creates the 15 pathways (12 direct
+  buried, 3 submarine, owned by Baltic Fibre Networks), points the cable's segments at them and removes
+  `bb-cbl-00006-route`; the cable length, its FMS end mark and the circuit geometry follow the new route, and the
+  bare-fiber loss of `NF-FC-0005` becomes 243.9 dB (was 191.6). Descriptions that named "Gotland, Riga and Tallinn" now
+  name Nynäshamn, Gotland, Ventspils, Riga (Valga) and Tallinn. Checked offline first (the data modules import, the legs
+  join, the route starts and ends at the two sites and passes every waypoint within 1.2 km, the sea legs cross no shore,
+  the rail leg lies on the railway, no spurs, the cable length equals the sum of the legs), then built from an empty
+  NetBox 4.7.3: `verify.py` passes (70 checks), and a second `build.py` after the move to 4.7.4 changes nothing. The
+  in-place upgrade of a 0.8.0 database described above has not been rehearsed.
 
 ## Goal
 

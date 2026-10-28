@@ -2,6 +2,26 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
+## Unreleased
+
+Built from an empty NetBox on 4.7.3 (netbox-fms 0.6.0, netbox-pathways 0.3.0, netbox-wdm 0.2.2; netbox-secrets is not installed, so its login step is skipped): `verify.py` passes (70 checks). After the dev NetBox moved to 4.7.4, a second `build.py` changes nothing and `verify.py` still passes. The in-place upgrade of a 0.8.0 database has not been rehearsed (see `docs/DESIGN.md`, 2026-10-28).
+
+- **The Stockholm East - Helsinki backup route (`bb-cbl-00006`, `BFN-DF-0001`) follows the southern Baltic route of
+  `docs/Baltic Route.md`.** From Nacka by road past Handen to Västerhaninge, along the railway to Nynäshamn, under the
+  sea to Fårösund, across Gotland by road to Ljugarn, under the sea to Ventspils, along the A10 past Pūre to Riga, the
+  A2/A3 to Valmiera and Valga, roads 6 and 49 to Viljandi and Imavere, road 2 to Tallinn, under the sea to the Vuosaari
+  harbour and by road into Helsinki: 1154.3 km in 15 legs, 393.3 km of it subsea (was one straight line of 905 km over
+  Visby). Each land leg is a direct-buried pathway and each sea crossing a submarine pathway, owned by Baltic Fibre
+  Networks, with one cable segment per leg; the circuit geometry carries the whole route. The dataset now has 84 cable
+  segments (13 submarine, 30 direct buried). The bare-fiber loss of `NF-FC-0005` is 243.9 dB (was 191.6).
+- **Tools.** `tools/derive_longhaul.py` derives both Helsinki routes (`python tools/derive_longhaul.py bfn` derives one
+  and keeps the other), with a railway corridor (Overpass, `railway=rail`) as a new kind of section and a dry reference
+  point and grid step per sea crossing. `tools/waterpath.py`: a coastline vertex lying exactly on a grid row could make
+  the row lose a crossing and invert from there on (it cut the Vuosaari harbour off the open sea); fixed.
+  `OVERPASS_URL` selects another Overpass instance when the main one does not answer.
+- **Upgrading an existing NetBox.** `04_transport.py` replaces `bb-cbl-00006-route` with the 15 legs, as it did for
+  `bb-cbl-00005` in 0.8.0. `verify.py` is unchanged: its route checks already follow the legs of a route laid leg by leg.
+
 ## 0.8.0
 
 Two routes changed; the rest of the dataset is as in 0.7.0. Built from an empty NetBox on 4.7.3 (netbox-fms 0.6.0, netbox-pathways 0.3.0; netbox-secrets has no 4.7 release, so its login step is skipped): `verify.py` passes (70 checks), a second `build.py` changes nothing, an existing 0.7.0 database is brought up to date in place the same way (13 objects removed, the rest reconciled), and the print plugin's acceptance tests pass (199 checks). Not rebuilt on NetBox 4.6.

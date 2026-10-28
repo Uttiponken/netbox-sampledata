@@ -104,14 +104,14 @@ length.
 | `bb-cbl-00003` | `stn-patch-osl-01` – `osl-patch-stn-01` (**leased** from Polarlink Transit, `PLT-100234`) | Västerås, Örebro, Karlstad, Charlottenberg | 436 km |
 | `bb-cbl-00004` | `got-patch-mma-01` – `mma-patch-got-01` | the west coast: Varberg, Halmstad, Helsingborg, Landskrona | 258 km |
 | `bb-cbl-00005` | Stockholm North – Helsinki, **NSN-DF-0001** (Nordic Subsea Networks), between the vendor's two MeetMe panels | Norrtälje, Grisslehamn, Åland (Mariehamn, Kumlinge), Korpo, Turku, Salo: roads, six sea crossings and a power line corridor, 19 legs (below) | 592 km |
-| `bb-cbl-00006` | Stockholm East – Helsinki, **BFN-DF-0001** (Baltic Fibre Networks), between the vendor's two MeetMe panels | Visby (Gotland), Riga, Tallinn | 905 km |
+| `bb-cbl-00006` | Stockholm East – Helsinki, **BFN-DF-0001** (Baltic Fibre Networks), between the vendor's two MeetMe panels | Handen, Västerhaninge, the railway to Nynäshamn, Gotland (Fårösund, Ljugarn), Ventspils, Pūre, Riga, Valmiera, Valga, Viljandi, Imavere, Tallinn, Vuosaari: roads, a railway corridor and three sea crossings, 15 legs (below) | 1154 km |
 | `bb-cbl-00007` | `stw-patch-got-01` – `got-patch-stw-01` (the **southern** route to Gothenburg) | Nyköping, Norrköping, Linköping, Jönköping, Borås | 389 km |
 
 The northern and southern Gothenburg trunks are the same kind of cable and
 are lit the same way (pair 1, DWDM); the southern one shares the E4 corridor
 with the Malmö trunk between Södertälje and Jönköping, as the two northern
-trunks (Gothenburg and Oslo) share the corridor to Karlstad. Six of these routes are
-straight lines between towns; the NSN route to Helsinki and the metro ring below follow roads, shores and power lines.
+trunks (Gothenburg and Oslo) share the corridor to Karlstad. Five of these routes are
+straight lines between towns; the two routes to Helsinki and the metro ring below follow roads, shores, a railway and power lines.
 
 **The Helsinki route over NSN (`bb-cbl-00005`).** The leased pair runs from Stockholm North up road 265 and the E18 to
 Norrtälje, over Väddö (roads 76 and 283) to Grisslehamn, across the sea to Eckerö on Åland, over the Åland roads to
@@ -150,6 +150,42 @@ The geometry is derived by `tools/derive_longhaul.py` (roads and ferries from Op
 from OpenStreetMap through the Overpass API, the water route of the Kumlinge – Korpo crossing with `tools/waterpath.py`)
 and stored in `data/longhaul_geometry.py`. The corridor makes a small dogleg through the Ingå substation, where the two
 real lines meet. Who owns what is invented.
+
+**The Helsinki route over BFN (`bb-cbl-00006`), the southern Baltic route.** The leased pair runs from Stockholm East
+(Nacka) by roads 222, 75 and 73 past Handen to Västerhaninge, then along the railway (the Nynäs line) to Nynäshamn
+station at the harbour, under the sea to Fårösund on Gotland, by roads 148, 147, 146 and 143 across Gotland to Ljugarn,
+under the sea to Ventspils, along the A10 past Pūre to Riga, along the A2 and A3 to Valmiera and Valga, along roads 6
+and 49 (by Karksi-Nuia) to Viljandi, along road 49 to Imavere and road 2 to Tallinn, under the sea to the Vuosaari
+harbour (Vuosaaren satama) and by road into Helsinki. It replaces the old route, a straight line of 905 km through Visby,
+Riga and Tallinn. It is laid like the NSN route: a direct-buried pathway for each land leg and a submarine pathway for
+each sea crossing, all owned by Baltic Fibre Networks, with one cable segment per leg. The circuit `BFN-DF-0001`
+carries the whole route as its geometry. At 1154 km it is almost twice the length of the NSN route, which keeps it the
+longer, geographically diverse backup.
+
+| Leg | From – to | Laid as | Length |
+|---|---|---|---|
+| 1 | Stockholm East - Handen | direct buried | 20.9 km |
+| 2 | Handen - Västerhaninge | direct buried | 7.6 km |
+| 3 | Västerhaninge - Nynäshamn | direct buried, along the railway | 32.3 km |
+| 4 | Nynäshamn - Fårösund | submarine | 132.8 km |
+| 5 | Fårösund - Ljugarn | direct buried | 79.8 km |
+| 6 | Ljugarn - Ventspils | submarine | 170.3 km |
+| 7 | Ventspils - Pūre | direct buried | 105.8 km |
+| 8 | Pūre - Riga | direct buried | 86.1 km |
+| 9 | Riga - Valmiera | direct buried | 108.7 km |
+| 10 | Valmiera - Valga | direct buried | 49.4 km |
+| 11 | Valga - Viljandi | direct buried | 92.9 km |
+| 12 | Viljandi - Imavere | direct buried | 51.2 km |
+| 13 | Imavere - Tallinn | direct buried | 108.4 km |
+| 14 | Tallinn - Vuosaari | submarine | 90.3 km |
+| 15 | Vuosaari - Helsinki | direct buried | 17.9 km |
+| | **Total** | 12 land legs, 3 submarine | **1154.3 km** (393.3 km subsea) |
+
+The same tool derives it: the roads through OSRM, the railway from OpenStreetMap through the Overpass API, and the three
+sea crossings with `tools/waterpath.py` (each one leaves its harbour through the water and stays off every island; the
+Nynäshamn crossing enters the Fårösund strait from the north). Two waypoints keep the route on the major roads: Handen is
+joined where road 73 passes it, and Valga - Viljandi goes by Karksi-Nuia (roads 6 and 49, 93 km) where the router would
+take 28 km of local roads (79 km). Who owns what is invented.
 
 **Strands and fiber circuits.** A trunk panel's duplex LC port *n* carries pair *n*, so strands 2*n*-1 and 2*n* of the
 cable (netbox-fms `FiberStrand`) are landed on port *n* of the panel at each end; the strand records give the tube and
@@ -251,9 +287,10 @@ The 41 innerducts have the same limitation, because they are base pathways too. 
 skips them, and the **Map** button on an innerduct's page (`?select=innerduct-<id>`) also opens the map on the whole
 dataset instead of the stretch. Each innerduct has exactly the line of its parent conduit, so the route is visible
 through the conduit, but the innerduct itself (its owner, its colour, the cable inside it) cannot be selected on the
-map. This matters: of the dataset's 70 cable segments, 41 lie in innerducts (the ring) and 10 in submarine crossings (4 in the ring,
-6 on the Helsinki route), and only the 19 direct-buried ones (six long-haul routes and 13 land legs to Helsinki) are on a pathway
-type the map draws. The circuit geometry of `NSN-DF-0001` does show the whole Helsinki route. The data is as netbox-pathways models it
+map. This matters: of the dataset's 84 cable segments, 41 lie in innerducts (the ring) and 13 in submarine crossings (4 in the ring,
+6 on the NSN route and 3 on the BFN route to Helsinki), and only the 30 direct-buried ones (five long-haul routes, 13 land legs of
+the NSN route and 12 of the BFN route) are on a pathway type the map draws. The circuit geometries of `NSN-DF-0001` and
+`BFN-DF-0001` do show the whole Helsinki routes. The data is as netbox-pathways models it
 (a cable segment on an innerduct inside a conduit); nothing is missing from the dataset.
 
 ## 5. DWDM transport
