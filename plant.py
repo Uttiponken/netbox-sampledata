@@ -31,6 +31,12 @@ def _innerduct_color():
     return {"orange": "ff9800"}.get(color, color) if version_at_least("pathways", 0, 3) else color
 
 
+# netbox-pathways 0.4.0 gave the innerduct endpoint (and every other pathway type) a tenant field. Before it, an
+# innerduct's owner could only be set through the base `pathways` endpoint.
+def _innerduct_has_tenant():
+    return version_at_least("pathways", 0, 4)
+
+
 def point(lon, lat):
     return f"POINT ({lon} {lat})"
 
@@ -114,17 +120,21 @@ def legs(nb, tenants, made):
                                        "outer_diameter": M.DUCT["outer_diameter"], "depth": M.DUCT["depth"]},
                                       comments=f"Municipal duct, {who}.", **common)
             report("conduit", parent, st, who)
-            # The innerduct belongs to whoever owns the cable (inside a conduit the municipality owns). The innerduct
-            # endpoint has no tenant field, so the owner is set on the base pathway.
-            inner_fields = {k: v for k, v in common.items() if k != "tenant"}
+            # The innerduct belongs to whoever owns the cable (inside a conduit the municipality owns). From
+            # netbox-pathways 0.4.0 the owner is written with the innerduct; before it, on the base pathway.
+            if _innerduct_has_tenant():
+                inner_fields = dict(common, tenant=cable_owner.id)
+            else:
+                inner_fields = {k: v for k, v in common.items() if k != "tenant"}
             inner, st = _pathway(nb.plugins.pathways.innerducts, f"{base} innerduct", path,
                                  {"parent_conduit": parent.id, "size": M.INNERDUCT["size"], "color": _innerduct_color(),
                                   "position": M.INNERDUCT["position"]},
                                  comments=f"Innerduct that carries the metro cable, {who}.", **inner_fields)
-            as_pathway = nb.plugins.pathways.pathways.get(inner.id)
-            if (as_pathway.tenant.id if as_pathway.tenant else None) != cable_owner.id:
-                as_pathway.update({"tenant": cable_owner.id})
-                st = "updated" if st == "exists" else st
+            if not _innerduct_has_tenant():
+                as_pathway = nb.plugins.pathways.pathways.get(inner.id)
+                if (as_pathway.tenant.id if as_pathway.tenant else None) != cable_owner.id:
+                    as_pathway.update({"tenant": cable_owner.id})
+                    st = "updated" if st == "exists" else st
             report("innerduct", inner, st, f"{who}, owner {cable_owner.name}")
 
 

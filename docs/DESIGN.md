@@ -326,6 +326,28 @@ build failed in layer 2, on an empty database and on an upgraded one alike.
   (1 profile and 18 nodes moved to the new key), `verify.py` 70/0 and a rebuild that changes nothing; then from an
   empty database on 0.3.0, 70/0 and a second run that changes nothing.
 
+## netbox-docker v1.3.0: the innerduct owner, and what needed nothing (2026-11-03)
+
+netbox-docker v1.3.0 moved to netbox-fms 0.8.0, netbox-notices 1.4.0 and netbox-pathways 0.4.0 (NetBox 4.7.4 as
+before). Release 0.8.2 already built on it unchanged; one thing became simpler.
+
+- **The innerduct's owner goes with the innerduct.** Up to netbox-pathways 0.3.0 the `innerducts` endpoint had no
+  `tenant` (reported upstream as jsenecal/netbox-pathways#168, fixed in 0.4.0), so `plant.py` created the innerduct
+  without an owner and then set it on the base `pathways` endpoint, compared by hand. On 0.4.0 and later it is now one
+  more reconciled field of the innerduct (`_innerduct_has_tenant()`); the old route stays for older releases. The
+  stored value is the same either way, which is why a database built before the change needs nothing.
+- **netbox-fms 0.7.0 and 0.8.0 need nothing.** 0.7.0 adds fiber faults: a path that crosses an open fault is marked
+  defective, circuit assignment refuses it, active assignments on it break. The dataset reports no faults, so its
+  assignments are unaffected; 0.8.0 only requires NetBox 4.7.0. A fault could become a teaching scenario later (it
+  would break the circuit on the faulted cable and show how FMS reacts), but nothing is planned.
+- **netbox-notices 1.4.0, netbox-dns, netbox-topology-views and netbox-cable-labels need nothing.** The dataset holds
+  no notices or DNS data; topology-views draws the existing cables; every cable is created with its own label, so
+  cable-labels never writes one.
+- **Verified** from an empty database on throwaway stacks of netbox-docker v1.3.0 (netbox-pathways 0.4.0) and v1.0.0
+  (0.3.0, the old route): `verify.py` 70/0, an unchanged second run, and an innerduct whose owner was changed by hand
+  set back by `plant.py`; on v1.3.0 also the netbox-tracepath-plugin smoke and acceptance tests. On the development
+  NetBox (v1.3.0) `plant.py` changes nothing.
+
 ## Goal
 
 An educational dataset for a fresh NetBox install, built in stages that

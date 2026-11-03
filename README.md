@@ -34,13 +34,20 @@ built the way it is, and the history of how it got here.
 | netbox-secrets | One encrypted login per router | No logins |
 | netbox-inventory | The cold-spares depot | No spare assets |
 
-The dataset follows the plugin releases it meets. It was built from an empty NetBox and verified (a second run
-changes nothing) on NetBox 4.7.3 with netbox-fms 0.6.0 and netbox-pathways 0.3.0 (70 checks). Release 0.7.0 was also
-verified on NetBox 4.6.10 with netbox-fms 0.4.1 and netbox-pathways 0.2.2, which store fiber circuit paths and structure
-points differently; the loader asks the installed version (`version_at_least()` in `common.py`), but the changes since
-0.7.0 (the two reroutes) have been built on 4.7.3 only. netbox-wdm 0.2.2 and 0.3.0 both work: 0.3.0 renamed the grid
-keys, and the loader writes the one the installed version knows. netbox-secrets has no
-release for NetBox 4.7 yet, so there the logins and their check are skipped.
+The dataset follows the plugin releases it meets. It is built from an empty NetBox and verified (70 checks, a second
+run changes nothing) on [netbox-docker](https://github.com/Uttiponken/netbox-docker) v1.3.0: NetBox 4.7.4 with
+netbox-fms 0.8.0, netbox-pathways 0.4.0 and netbox-wdm 0.3.0. It also builds on netbox-docker v1.0.0 (NetBox 4.7.3,
+netbox-fms 0.6.0, netbox-pathways 0.3.0, netbox-wdm 0.2.2). Release 0.7.0 was also verified on NetBox 4.6.10 with
+netbox-fms 0.4.1 and netbox-pathways 0.2.2, which store fiber circuit paths and structure points differently; the
+loader asks the installed version (`version_at_least()` in `common.py`), but the changes since 0.7.0 (the reroutes)
+have been built on 4.7 only. Where a plugin release changed its API, the loader writes what the installed version
+knows: netbox-wdm 0.3.0 renamed the grid keys, and netbox-pathways 0.4.0 takes an innerduct's owner directly.
+netbox-secrets has no release for NetBox 4.7 yet, so there the logins and their check are skipped.
+
+netbox-docker also carries netbox-topology-views, netbox-dns, netbox-notices and netbox-cable-labels. The dataset adds
+nothing for them: netbox-topology-views draws the cables that are already there, and every cable in the dataset has a
+label of its own, so netbox-cable-labels never fills one in. DNS records and maintenance notices are not part of the
+scenario (see `docs/ROADMAP.md`).
 
 `build.py` lists the plugins it found at the start, prints `[skipped]` for every step it left out, and sums them up at
 the end; `verify.py` skips the matching groups of checks and counts them. On a vanilla NetBox the core checks
@@ -194,8 +201,7 @@ The PDFs go to `/tmp/tp-out` in the container. Set `NETBOX_COMPOSE` to use anoth
 
 Wireless links (no radio equipment in the scenario), customer CPE routers,
 a second wavelength customer at Oslo, a DCP-110 shelf in front of the
-Helsinki backbone wavelengths, a topology diagram plugin, power, and anything above management addressing and
-iBGP.
+Helsinki backbone wavelengths, power, and anything above management addressing and iBGP.
 
 ## Authors
 

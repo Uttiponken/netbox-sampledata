@@ -7,7 +7,7 @@ thin slice above them) is in `README.md`, the reasons behind it in `DESIGN.md`, 
 
 ## Done
 
-Released `v0.1.0` to `v0.8.2` (2026-10-03 to 2026-10-28). Every release builds from an empty NetBox in one run and
+Released `v0.1.0` to `v0.8.3` (2026-10-03 to 2026-11-03). Every release builds from an empty NetBox in one run and
 passes `verify.py`. The milestones:
 
 - **0.2.0** The build rewritten as seven layered, reconciling scripts.
@@ -20,13 +20,18 @@ passes `verify.py`. The milestones:
   Tallinn, as in `Baltic Route.md`.
 - **0.8.2** Builds on netbox-wdm 0.2.2 and 0.3.0 (0.3.0 renamed the grid keys; the loader writes the key the installed
   version knows). Released together with netbox-docker v1.2.0, which moves to netbox-wdm 0.3.0.
+- **0.8.3** Follows netbox-docker v1.3.0 (netbox-fms 0.8.0, netbox-notices 1.4.0, netbox-pathways 0.4.0): on
+  netbox-pathways 0.4.0 and later an innerduct's owner is written with the innerduct; the data is unchanged.
 
 0.8.0 also builds on netbox-docker v1.1.0 (with netbox-dns, netbox-notices, netbox-cable-labels and
-netbox-topology-views added): 70 checks passed, 0 failed, and a second run changed nothing (2026-10-28).
+netbox-topology-views added): 70 checks passed, 0 failed, and a second run changed nothing (2026-10-28). 0.8.2 builds
+unchanged on netbox-docker v1.3.0 (netbox-fms 0.8.0, netbox-notices 1.4.0, netbox-pathways 0.4.0; 2026-11-02).
 
 ## In progress
 
-Nothing at the moment. Open from 0.8.1: the in-place upgrade of a 0.8.0 database to 0.8.1 has not been rehearsed.
+Nothing at the moment. The in-place upgrade of a 0.8.0 database, open since 0.8.1, was done on 2026-11-02: the
+development NetBox, built with 0.8.0, upgraded to netbox-docker v1.3.0, then `build.py` of 0.8.2 added the
+leg-by-leg Baltic route (23 changes), a second run changed nothing, and `verify.py` passed 70 checks.
 
 ## Planned, when the stack changes
 
@@ -42,11 +47,11 @@ Nothing at the moment. Open from 0.8.1: the in-place upgrade of a 0.8.0 database
 
 ## To decide
 
-- **The plugins added in netbox-docker v1.1.0.** The dataset uses none of them. netbox-topology-views needs no data of
-  its own (it draws the existing cables), so the line "a topology diagram plugin" under "Not modeled, on purpose" in
-  `README.md` no longer fits. Whether the dataset should show netbox-dns or netbox-notices (for example DNS records
-  for the management and loopback addresses, or maintenance notices for the leased circuits) is open; nothing is
-  planned.
+- **The plugins added in netbox-docker v1.1.0, and FMS fiber faults.** The dataset uses none of them;
+  netbox-topology-views needs no data of its own (it draws the existing cables), and `README.md` says so. Whether the
+  dataset should show netbox-dns or netbox-notices (for example DNS records for the management and loopback
+  addresses, or maintenance notices for the leased circuits), or a fiber fault with netbox-fms 0.7 and later (it would
+  break the circuit on the faulted cable), is open; nothing is planned.
 
 ## Kept in reserve
 

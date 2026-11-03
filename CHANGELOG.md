@@ -2,7 +2,26 @@
 
 Releases are tagged `vX.Y.Z`. Every release builds from an empty NetBox in one run and passes `verify.py`.
 
-## 0.8.2
+## 0.8.3
+
+Follows netbox-docker v1.3.0 (NetBox 4.7.4, netbox-fms 0.8.0, netbox-notices 1.4.0, netbox-pathways 0.4.0); the data
+itself is as in 0.8.1.
+
+- **netbox-pathways 0.4.0 takes an innerduct's owner directly.** Before it, the `innerducts` endpoint had no `tenant`
+  field, so `plant.py` set the owner afterwards through the base `pathways` endpoint. On 0.4.0 and later the owner is
+  now written and reconciled with the innerduct itself (`_innerduct_has_tenant()`, through `version_at_least()`); on
+  older releases nothing changes. The stored owners are the same either way, so a database built with 0.8.2 needs no
+  change.
+- **netbox-fms 0.7.0 and 0.8.0** (fiber faults) and **netbox-notices 1.4.0** need nothing: the dataset reports no
+  faults and holds no notices.
+- **Documentation:** `README.md` names netbox-docker v1.3.0 as the stack the dataset is checked on, and says why the
+  dataset adds nothing for netbox-topology-views, netbox-dns, netbox-notices and netbox-cable-labels; "a topology
+  diagram plugin" is no longer under "Not modeled". `docs/ROADMAP.md` and `docs/DESIGN.md` follow.
+- **Checked** on throwaway NetBoxes from an empty database: on netbox-docker v1.3.0 (netbox-pathways 0.4.0) and on
+  v1.0.0 (netbox-pathways 0.3.0), each with `verify.py` 70 passed, 0 failed, an unchanged second run, and an innerduct
+  whose owner was changed by hand put back by `plant.py`; on v1.3.0 also the netbox-tracepath-plugin smoke and
+  acceptance tests. On the development NetBox (v1.3.0, data built with 0.8.0 and brought up to date with 0.8.2)
+  `plant.py` changes nothing.
 
 netbox-wdm 0.3.0 support; the data itself is as in 0.8.1.
 
