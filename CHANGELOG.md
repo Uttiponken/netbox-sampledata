@@ -23,6 +23,8 @@ itself is as in 0.8.1.
   acceptance tests. On the development NetBox (v1.3.0, data built with 0.8.0 and brought up to date with 0.8.2)
   `plant.py` changes nothing.
 
+## 0.8.2
+
 netbox-wdm 0.3.0 support; the data itself is as in 0.8.1.
 
 - **netbox-wdm 0.3.0 renamed the 100 GHz C-band grid key** (`dwdm_100ghz` is now `dwdm_c_100ghz`). Its migration

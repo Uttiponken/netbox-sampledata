@@ -205,10 +205,12 @@ Helsinki backbone wavelengths, power, and anything above management addressing a
 
 ## Authors
 
-Co-authored by JP and Claude (Anthropic's AI assistant, model **Claude Sonnet 5.5**, `claude-sonnet-5-5`, used
-through Claude Code): the scenario, the loader scripts, the checks and the documentation were developed together
-in pair-programming sessions. Every commit made with Claude's help carries a `Co-Authored-By: Claude Sonnet 5.5`
-line, so the model behind any change can be read from the history and compared with later ones.
+Co-authored by JP and Claude (Anthropic's AI assistant, used through Claude Code): the scenario, the loader scripts,
+the checks and the documentation were developed together in pair-programming sessions. Two Claude models have
+worked on it: **Claude Sonnet 5.5** (`claude-sonnet-5-5`) up to and including 0.8.0, and **Claude Opus 5.5**
+(`claude-opus-5-5`) on every commit since (from 2026-10-28, releases 0.8.1 onwards). Every commit made with
+Claude's help carries a `Co-Authored-By:` line naming the model, so the model behind any change can be read from
+the history and compared with later ones.
 
 **Fictional companies, real hardware.** Nordfiber AB and every customer, partner, provider, contact and circuit in
 the dataset are invented; any resemblance to real companies or people is coincidental. The equipment is real
